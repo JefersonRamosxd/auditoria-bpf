@@ -11,10 +11,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
 
+<!-- Classes reutilizáveis (evita repetir dezenas de classes Tailwind) -->
 <style type="text/tailwindcss">
   @layer components {
     .card  { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md; }
-    .inp   { @apply w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#166534] outline-none min-h-[42px]; }
+    .inp   { @apply w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-[#166534] outline-none min-h-[42px]; }
     .inp[readonly] { @apply bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 cursor-not-allowed; }
     .lbl   { @apply block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1; }
     .btn   { @apply px-4 py-2.5 rounded-lg text-sm font-semibold transition inline-flex items-center justify-center gap-2 min-h-[42px] cursor-pointer; }
@@ -24,21 +25,38 @@
     .modal { @apply fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto; }
     .box   { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full shadow-2xl overflow-hidden my-auto; }
     .box-h { @apply bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 font-bold text-base; }
-    .pill    { @apply px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap min-h-[36px] flex items-center; }
+    .pill     { @apply px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap min-h-[36px] flex items-center shrink-0; }
     .pill-off { @apply bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700; }
     .pill-on  { @apply bg-[#166534] text-white shadow-sm; }
     .nav-on   { @apply bg-[#166534] text-white shadow ring-2 ring-emerald-400/50; }
     .nav-off  { @apply bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700; }
     .badge { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold; }
-    .kpi   { @apply card p-5 flex items-center justify-between; }
+    .kpi   { @apply card p-4 sm:p-5 flex items-center justify-between gap-2; }
     .kpi-t { @apply text-xs font-semibold uppercase text-slate-400; }
-    .kpi-v { @apply text-3xl font-extrabold mt-1; }
-    .kpi-i { @apply p-3 rounded-xl border text-xl; }
+    .kpi-v { @apply text-2xl sm:text-3xl font-extrabold mt-1; }
+    .kpi-i { @apply hidden sm:block p-3 rounded-xl border text-xl; }
     .th    { @apply p-3.5; }
   }
 </style>
 <style>
-  body { font-family: 'Inter', sans-serif; }
+  html { -webkit-text-size-adjust: 100%; }
+  button, a, label, select { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  #listaSetores > *, #lista5sSetores > * { width: 14rem; }
+  @media (min-width: 1024px) { #listaSetores > *, #lista5sSetores > * { width: 100%; } }
+  /* Celular: cada linha da tabela vira um cartão */
+  @media screen and (max-width: 767px) {
+    .tabela-cards thead { display: none; }
+    .tabela-cards, .tabela-cards tbody { display: block; width: 100%; }
+    .tabela-cards tr { display: block; padding: .75rem 1rem; }
+    .tabela-cards td { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; padding: .4rem 0 !important; max-width: none !important; text-align: right !important; }
+    .tabela-cards td::before { content: attr(data-label); flex: none; padding-top: 2px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #94a3b8; text-align: left; }
+    .tabela-cards td[data-label=""]::before { display: none; }
+    .tabela-cards td[data-label=""] { justify-content: center; }
+    .tabela-cards td[data-label="Critério"] { flex-direction: column; gap: .2rem; }
+    .tabela-cards td[data-label="Critério"] .cel { text-align: left; }
+    .tabela-cards td[data-label="Ações"] { align-items: center; }
+  }
+  body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
   .badge-conforme { background: rgba(22,101,52,.12); color: #166534; border: 1px solid rgba(22,101,52,.25); }
   .dark .badge-conforme { background: rgba(74,222,128,.15); color: #4ade80; border-color: rgba(74,222,128,.3); }
   .badge-nao-conforme { background: rgba(197,34,31,.12); color: #c5221f; border: 1px solid rgba(197,34,31,.25); }
@@ -46,19 +64,42 @@
   .badge-andamento { background: rgba(217,119,6,.12); color: #b45309; border: 1px solid rgba(217,119,6,.25); }
   .dark .badge-andamento { background: rgba(251,191,36,.15); color: #fbbf24; border-color: rgba(251,191,36,.3); }
   .row-vencido   { background: rgba(239,68,68,.08) !important; box-shadow: inset 4px 0 0 #ef4444; }
-  .row-andamento { background: rgba(245,158,11,.10) !important; box-shadow: inset 4px 0 0 #f59e0b; }
+  .row-andamento { background: #fef9c3 !important; box-shadow: inset 4px 0 0 #eab308; }
+  .dark .row-andamento { background: rgba(250,204,21,.13) !important; box-shadow: inset 4px 0 0 #facc15; }
   @media print {
     .no-print { display: none !important; }
     body { background: #fff !important; color: #000 !important; }
     .print-area { box-shadow: none !important; border: none !important; }
   }
 </style>
+<style>
+  .pdf-sheet { background:#fff; color:#000; font-family:Calibri,Carlito,Arial,sans-serif; font-size:12px; padding:12px; position:relative; max-width:1100px; min-width:900px; -webkit-print-color-adjust:exact; print-color-adjust:exact; page:pdf5s; }
+  .pdf-sheet::before { content:""; position:absolute; inset:0; background:url(https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png) center 62%/58% no-repeat; opacity:.09; pointer-events:none; }
+  .pdf-sheet table { width:100%; border-collapse:collapse; table-layout:fixed; position:relative; margin-top:-1px; break-inside:avoid; }
+  .pdf-sheet td, .pdf-sheet th { border:1px solid #000; padding:1px 6px; text-align:center; vertical-align:middle; font-weight:400; line-height:1.3; word-wrap:break-word; }
+  .pdf-sheet .gray { background:#c9c9c9 !important; font-weight:700; }
+  .pdf-sheet .esq { text-align:left; }
+  .pdf-sheet .tit { font-size:22px; font-weight:700; padding:22px 6px; }
+  .pdf-sheet .rev { width:150px; font-size:12px; }
+  .pdf-sheet .regras { text-align:left; font-size:10px; padding:2px 6px; vertical-align:top; }
+  .pdf-sheet .nota { font-size:14px; font-weight:700; }
+  .pdf-sheet .obs { font-size:9.5px; font-weight:400; font-style:italic; margin-top:3px; }
+  .pdf-sheet table.q { margin-top:-1px; }
+  @page pdf5s { size:A4 landscape; margin:8mm; }
+  @media print {
+    body.imprimindo-pdf > *:not(#previewPDF) { display:none !important; }
+    body.imprimindo-pdf #previewPDF { position:static !important; display:block !important; background:#fff !important; padding:0 !important; overflow:visible !important; }
+    body.imprimindo-pdf .pdf-toolbar { display:none !important; }
+    body.imprimindo-pdf .pdf-sheet { min-width:0; max-width:none; padding:0; }
+    body.imprimindo-pdf .pdf-sheet::before { position:fixed; }
+  }
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
-<!-- TELA DE LOGIN / SEGURANÇA NA WEB -->
-<div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-  <div class="card max-w-sm w-full p-6 space-y-6 text-center shadow-2xl bg-white dark:bg-slate-900">
+<!-- TELA DE LOGIN -->
+<div id="telaLogin" class="fixed inset-0 bg-slate-950 z-[60] flex items-center justify-center p-4 overflow-y-auto">
+  <div class="card max-w-sm w-full p-6 space-y-6 text-center shadow-2xl my-auto">
     <div class="w-full flex justify-center py-2">
       <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="max-h-16 w-auto object-contain">
     </div>
@@ -71,14 +112,14 @@
         <label class="lbl">Usuário</label>
         <div class="relative">
           <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-          <input type="text" id="inputUsuario" placeholder="Digite seu usuário..." class="inp !pl-10" required autofocus>
+          <input type="text" id="inputUsuario" placeholder="Digite seu usuário..." class="inp !pl-10" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" required autofocus>
         </div>
       </div>
       <div>
         <label class="lbl">Senha de Acesso</label>
         <div class="relative">
           <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-          <input type="password" id="inputSenha" placeholder="Digite sua senha..." class="inp !pl-10" required>
+          <input type="password" id="inputSenha" placeholder="Digite sua senha..." class="inp !pl-10" autocomplete="current-password" required>
         </div>
         <p id="erroLogin" class="hidden text-[11px] text-rose-500 font-semibold mt-1.5">Usuário ou senha incorretos. Tente novamente.</p>
       </div>
@@ -87,58 +128,114 @@
   </div>
 </div>
 
-<!-- APLICAÇÃO PRINCIPAL -->
+<!-- APLICAÇÃO PRINCIPAL (aparece após o login) -->
 <div id="appPrincipal" class="hidden flex-col min-h-screen">
-  <!-- HEADER -->
-  <header class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 min-h-20 flex flex-wrap items-center justify-between gap-3">
-      <div class="relative">
-        <button onclick="toggleMenuModulos(event)" class="btn btn-s !px-3.5 text-xs uppercase tracking-wider">
-          <i class="fa-solid fa-bars text-[#166534]"></i><span>Módulos / Auditorias</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
-        </button>
-        <div id="menuModulos" class="hidden absolute left-0 top-full pt-1 w-64 z-50">
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2">
-            <a href="#" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
-            <a href="#" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
-            <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-triangle-exclamation text-slate-400"></i><span>NÃO CONFORMIDADES</span></a>
-          </div>
-        </div>
-      </div>
 
-      <div class="flex items-center gap-3">
-        <div class="h-9 flex items-center">
-          <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="h-8 w-auto object-contain">
+<!-- HEADER -->
+<header class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:sticky top-0 z-40 shadow-sm">
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:min-h-20 grid grid-cols-[auto_1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-2">
+    <!-- Módulos -->
+    <div class="relative justify-self-start">
+      <button onclick="toggleMenuModulos(event)" class="btn btn-s !px-3 text-xs uppercase tracking-wider" aria-label="Módulos / Auditorias">
+        <i class="fa-solid fa-bars text-[#166534]"></i><span class="hidden lg:inline">Módulos / Auditorias</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
+      </button>
+      <div id="menuModulos" class="hidden absolute left-0 top-full pt-1 w-64 z-50">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2">
+          <a href="#" id="mod-bpf" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
+          <a href="#" id="mod-5s" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
+          <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-triangle-exclamation text-slate-400"></i><span>NÃO CONFORMIDADES</span></a>
         </div>
-        <h1 class="font-extrabold text-sm sm:text-base tracking-wide border-l border-slate-300 dark:border-slate-700 pl-3">Auditoria BPF</h1>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs"><i class="fa-solid fa-list-check"></i> Lançamentos</button>
-        <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs"><i class="fa-solid fa-chart-pie"></i> Dashboard BPF</button>
-        <button onclick="alternarModoEscuro()" class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
       </div>
     </div>
-  </header>
 
-  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Logo no centro -->
+    <div class="justify-self-center text-center min-w-0">
+      <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="h-9 sm:h-10 md:h-11 w-auto max-w-full mx-auto object-contain">
+      <h1 class="mt-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[.2em] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span id="tituloModulo">Auditoria BPF</span></h1>
+    </div>
 
-    <!-- TELA 1: LANÇAMENTOS -->
-    <section id="telaLancamentos" class="space-y-6">
-      <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl font-bold">Lançamentos de Campo</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filtre por setor, data ou código/critério, ou inicie uma nova inspeção.</p>
-        </div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <button onclick="abrirModalNovaAuditoria()" class="btn btn-p"><i class="fa-solid fa-plus"></i><span>Iniciar Nova Auditoria</span></button>
-          <button onclick="abrirModalCadastro()" class="btn btn-s"><i class="fa-solid fa-folder-plus"></i><span>Cadastro</span></button>
+    <!-- Celular: abas na 2ª linha e tema ao lado da logo | Tablet/PC: tudo na mesma linha -->
+    <div class="contents md:flex md:items-center md:justify-end md:justify-self-end md:gap-2">
+      <div class="col-span-3 row-start-2 grid grid-cols-2 gap-2 md:col-span-1 md:row-start-auto md:flex md:items-center">
+        <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-list-check"></i> Lançamentos</button>
+        <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-chart-pie"></i> <span id="lblDashboard">Dashboard BPF</span></button>
+      </div>
+      <button onclick="alternarModoEscuro()" class="col-start-3 row-start-1 md:col-start-auto md:row-start-auto justify-self-end p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema" aria-label="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+  <!-- TELA 1: LANÇAMENTOS -->
+  <section id="telaLancamentos" class="space-y-6">
+    <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-bold">Lançamentos de Campo</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filtre por setor, data ou código/critério, ou inicie uma nova inspeção.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:flex sm:items-center gap-3">
+        <button onclick="abrirModalNovaAuditoria()" class="btn btn-p"><i class="fa-solid fa-plus"></i><span>Iniciar Nova Auditoria</span></button>
+        <button onclick="abrirModalCadastro()" class="btn btn-s"><i class="fa-solid fa-folder-plus"></i><span>Cadastro</span></button>
+      </div>
+    </div>
+
+    <div class="no-print card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <div>
+        <label class="lbl">Setor Auditado</label>
+        <select id="filtroLancSetor" onchange="renderizarTabelaLancamentos()" class="inp">
+          <option value="TODOS">Todos os Setores</option>
+          <option value="ÁREA DE APOIO">Área de Apoio</option>
+          <option value="EXPEDIÇÃO">Expedição</option>
+          <option value="MANUTENÇÃO">Manutenção</option>
+          <option value="PRODUÇÃO">Produção</option>
+          <option value="SUPRIMENTOS">Suprimentos</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Data da Auditoria</label>
+        <input type="date" id="filtroLancData" onchange="renderizarTabelaLancamentos()" class="inp">
+      </div>
+      <div>
+        <label class="lbl">Pesquisar por Código / Critério</label>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+          <input type="text" id="filtroLancCodigo" oninput="renderizarTabelaLancamentos()" placeholder="Ex: 2.0, 25.1, teto..." class="inp !pl-9">
         </div>
       </div>
+      <button onclick="limparFiltrosLanc()" class="btn btn-s"><i class="fa-solid fa-eraser"></i><span>Limpar filtros</span></button>
+    </div>
 
-      <div class="no-print card p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    <div class="card overflow-hidden print-area">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 justify-between items-center bg-slate-50 dark:bg-slate-950/50">
+        <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Requisitos para Auditoria</span></h3>
+        <div class="flex items-center gap-3">
+          <span id="counterLancamentos" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
+          <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="tabela-cards w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <th class="th">Código / Data</th><th class="th">Setor &amp; Subsetor</th><th class="th">Critério BPF Auditado</th>
+              <th class="th text-center">Status</th><th class="th text-center">Avaliação BPF</th><th class="th">Prazo / Vencimento</th>
+              <th class="th text-center no-print">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyLancamentos" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELA 2: DASHBOARD -->
+  <section id="telaDashboard" class="space-y-6 hidden">
+    <div class="card p-5 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="lbl">Setor Auditado</label>
-          <select id="filtroLancSetor" onchange="renderizarTabelaLancamentos()" class="inp">
+          <select id="dashFilterSetor" onchange="atualizarDashboard()" class="inp">
             <option value="TODOS">Todos os Setores</option>
             <option value="ÁREA DE APOIO">Área de Apoio</option>
             <option value="EXPEDIÇÃO">Expedição</option>
@@ -147,114 +244,200 @@
             <option value="SUPRIMENTOS">Suprimentos</option>
           </select>
         </div>
+        <div><label class="lbl">Data Inicial</label><input type="date" id="dashFilterDataIni" onchange="atualizarDashboard()" class="inp"></div>
+        <div><label class="lbl">Data Final</label><input type="date" id="dashFilterDataFim" onchange="atualizarDashboard()" class="inp"></div>
+        <div><label class="lbl">Pesquisar</label><input type="text" id="dashFilterQuery" oninput="atualizarDashboard()" placeholder="Requisito, responsável..." class="inp"></div>
+      </div>
+    </div>
+
+    <!-- Barra de status: fica fixa logo abaixo do cabeçalho ao rolar a página -->
+    <div class="card sticky z-30 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 print:static" style="top: var(--hdr, 0px)">
+      <div id="pillsStatus" class="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]">
+        <span class="text-xs font-bold uppercase text-slate-400 mr-2 shrink-0">Status:</span>
+        <!-- botões gerados por JS -->
+      </div>
+      <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs shrink-0" aria-label="Imprimir / PDF"><i class="fa-solid fa-print"></i><span class="hidden sm:inline">Imprimir / PDF</span></button>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="kpi"><div><span class="kpi-t">Total de Itens</span><div id="kpiTotal" class="kpi-v">0</div><span class="text-[11px] text-slate-500">Auditados no período</span></div>
+        <div class="kpi-i bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"><i class="fa-solid fa-list-ol"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Índice BPF</span><div id="kpiIndice" class="kpi-v text-emerald-600 dark:text-emerald-400">0%</div><span id="kpiIndiceClass" class="text-[11px] font-bold text-emerald-500">-</span></div>
+        <div class="kpi-i bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"><i class="fa-solid fa-chart-line"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Não Conformidades</span><div id="kpiNC" class="kpi-v text-rose-600 dark:text-rose-400">0</div><span id="kpiNCSub" class="text-[11px] text-rose-500 font-medium">0% do total exibido</span></div>
+        <div class="kpi-i bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Planos em Aberto</span><div id="kpiPlanos" class="kpi-v text-amber-600 dark:text-amber-400">0</div><span class="text-[11px] text-slate-500">Requerem acompanhamento</span></div>
+        <div class="kpi-i bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50"><i class="fa-solid fa-clock-rotate-left"></i></div></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="card p-5">
+        <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-[#166534]"></i><span>Distribuição Geral BPF</span></h3>
+        <div class="relative h-56"><canvas id="chartDonut"></canvas></div>
+      </div>
+      <div class="card p-5 lg:col-span-2">
+        <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-simple text-[#166534]"></i><span>Conformidade &amp; Status por Setor (%)</span></h3>
+        <div class="relative h-56"><canvas id="chartBarras"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card p-4 sm:p-6 space-y-4">
+      <div class="flex flex-col xl:flex-row xl:items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
-          <label class="lbl">Data da Auditoria</label>
-          <input type="date" id="filtroLancData" onchange="renderizarTabelaLancamentos()" class="inp">
+          <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#166534]"></i><span>Evolução Mensal da Conformidade BPF (%)</span></h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Índice de conformidade por mês auditado. Respeita todos os filtros acima (setor, datas, pesquisa e status).</p>
         </div>
-        <div>
-          <label class="lbl">Pesquisar por Código / Critério</label>
-          <div class="relative">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <input type="text" id="filtroLancCodigo" oninput="renderizarTabelaLancamentos()" placeholder="Ex: 2.0, 25.1, teto..." class="inp !pl-10">
-          </div>
-        </div>
-        <button onclick="limparFiltrosLanc()" class="btn btn-s"><i class="fa-solid fa-eraser"></i><span>Limpar filtros</span></button>
-      </div>
-
-      <div class="card overflow-hidden print-area">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950/50">
-          <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Requisitos para Auditoria</span></h3>
-          <div class="flex items-center gap-3">
-            <span id="counterLancamentos" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
-            <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
-                <th class="th">Código / Data</th><th class="th">Setor &amp; Subsetor</th><th class="th">Critério BPF Auditado</th>
-                <th class="th text-center">Status</th><th class="th text-center">Avaliação BPF</th><th class="th">Prazo / Vencimento</th>
-                <th class="th text-center no-print">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyLancamentos" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TELA 2: DASHBOARD -->
-    <section id="telaDashboard" class="space-y-6 hidden">
-      <div class="card p-5 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label class="lbl">Setor Auditado</label>
-            <select id="dashFilterSetor" onchange="atualizarDashboard()" class="inp">
-              <option value="TODOS">Todos os Setores</option>
-              <option value="ÁREA DE APOIO">Área de Apoio</option>
-              <option value="EXPEDIÇÃO">Expedição</option>
-              <option value="MANUTENÇÃO">Manutenção</option>
-              <option value="PRODUÇÃO">Produção</option>
-              <option value="SUPRIMENTOS">Suprimentos</option>
-            </select>
-          </div>
-          <div><label class="lbl">Data Inicial</label><input type="date" id="dashFilterDataIni" onchange="atualizarDashboard()" class="inp"></div>
-          <div><label class="lbl">Data Final</label><input type="date" id="dashFilterDataFim" onchange="atualizarDashboard()" class="inp"></div>
-          <div><label class="lbl">Pesquisar</label><input type="text" id="dashFilterQuery" oninput="atualizarDashboard()" placeholder="Requisito, responsável..." class="inp"></div>
-        </div>
-        <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2">
-          <div id="pillsStatus" class="flex items-center gap-2 overflow-x-auto pb-1">
-            <span class="text-xs font-bold uppercase text-slate-400 mr-2">Status:</span>
-          </div>
-          <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="kpi"><div><span class="kpi-t">Total de Itens</span><div id="kpiTotal" class="kpi-v">0</div><span class="text-[11px] text-slate-500">Auditados no período</span></div>
-          <div class="kpi-i bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"><i class="fa-solid fa-list-ol"></i></div></div>
-        <div class="kpi"><div><span class="kpi-t">Índice BPF</span><div id="kpiIndice" class="kpi-v text-emerald-600 dark:text-emerald-400">0%</div><span id="kpiIndiceClass" class="text-[11px] font-bold text-emerald-500">-</span></div>
-          <div class="kpi-i bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"><i class="fa-solid fa-chart-line"></i></div></div>
-        <div class="kpi"><div><span class="kpi-t">Não Conformidades</span><div id="kpiNC" class="kpi-v text-rose-600 dark:text-rose-400">0</div><span id="kpiNCSub" class="text-[11px] text-rose-500 font-medium">0% do total exibido</span></div>
-          <div class="kpi-i bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
-        <div class="kpi"><div><span class="kpi-t">Planos em Aberto</span><div id="kpiPlanos" class="kpi-v text-amber-600 dark:text-amber-400">0</div><span class="text-[11px] text-slate-500">Requerem acompanhamento</span></div>
-          <div class="kpi-i bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50"><i class="fa-solid fa-clock-rotate-left"></i></div></div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="card p-5">
-          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-[#166534]"></i><span>Distribuição Geral BPF</span></h3>
-          <div class="relative h-56"><canvas id="chartDonut"></canvas></div>
-        </div>
-        <div class="card p-5 lg:col-span-2">
-          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-simple text-[#166534]"></i><span>Conformidade &amp; Status por Setor (%)</span></h3>
-          <div class="relative h-56"><canvas id="chartBarras"></canvas></div>
-        </div>
-      </div>
-
-      <div class="card p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-          <div>
-            <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#166534]"></i><span>Variação da Taxa de Conformidade BPF (%)</span></h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Índice de conformidade por mês auditado (respeita os filtros de setor, data e pesquisa).</p>
-          </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#10b981]"></span>Subiu</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#ef4444]"></span>Caiu</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#64748b]"></span>Estável / 1º mês</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-amber-500"></span>Meta 95%</span>
           <div id="boxVariacaoMes" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs Mês Anterior:</span>
             <span id="txtVariacaoPct" class="text-sm font-extrabold">-</span>
           </div>
         </div>
-        <div class="relative h-64"><canvas id="chartEvolucaoLinha"></canvas></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
+        <div>
+          <p class="lbl">Conformidade por setor <span class="normal-case font-medium text-slate-400">(clique para filtrar)</span></p>
+          <div id="listaSetores" class="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0"></div>
+        </div>
+        <div class="min-w-0">
+          <div class="relative h-72"><canvas id="chartEvolucaoLinha"></canvas></div>
+          <div id="topSubsetores" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-200 dark:border-slate-800"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <!-- ========== 5S: LANÇAMENTOS AUDITORIA ========== -->
+    <section id="tela5sLanc" class="space-y-6 hidden">
+      <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold">Lançamentos Auditoria</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filtre por setor, data ou código, ou inicie uma nova auditoria 5S.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:flex sm:items-center gap-3">
+          <button onclick="abrirModalNova5s()" class="btn btn-p"><i class="fa-solid fa-plus"></i><span>Iniciar Nova Auditoria</span></button>
+          <button onclick="abrirModalCadastro()" class="btn btn-s"><i class="fa-solid fa-folder-plus"></i><span>Cadastro</span></button>
+        </div>
+      </div>
+      <div class="no-print card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div><label class="lbl">Setor Auditado</label><select id="f5sSetor" onchange="renderizar5sLanc()" class="inp"><option value="TODOS">Todos os Setores</option>
+            <option value="ÁREA DE APOIO">Área de Apoio</option>
+            <option value="EXPEDIÇÃO">Expedição</option>
+            <option value="MANUTENÇÃO">Manutenção</option>
+            <option value="PRODUÇÃO">Produção</option>
+            <option value="SUPRIMENTOS">Suprimentos</option></select></div>
+        <div><label class="lbl">Data da Auditoria</label><input type="date" id="f5sData" onchange="renderizar5sLanc()" class="inp"></div>
+        <div><label class="lbl">Pesquisar por Código / Setor</label>
+          <div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+          <input type="text" id="f5sBusca" oninput="renderizar5sLanc()" placeholder="Ex: A1, produção, rotulagem..." class="inp !pl-10"></div></div>
+        <button onclick="limparFiltros5s()" class="btn btn-s"><i class="fa-solid fa-eraser"></i><span>Limpar filtros</span></button>
+      </div>
+      <div class="card overflow-hidden print-area">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 justify-between items-center bg-slate-50 dark:bg-slate-950/50">
+          <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Auditorias 5S</span></h3>
+          <div class="flex items-center gap-3">
+            <span id="counter5s" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
+            <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="tabela-cards w-full text-left text-sm border-collapse">
+            <thead><tr class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <th class="th">Código / Data</th><th class="th">Setor &amp; Subsetor</th><th class="th">Pontuação 5S</th>
+              <th class="th text-center">Status</th><th class="th text-center">Avaliação 5S</th><th class="th">Prazo / Vencimento</th><th class="th text-center no-print">Ações</th>
+            </tr></thead>
+            <tbody id="tbody5s" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+          </table>
+        </div>
       </div>
     </section>
-  </main>
+
+    <!-- ========== 5S: DASHBOARD ========== -->
+    <section id="tela5sDash" class="space-y-6 hidden">
+      <div class="card p-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div><label class="lbl">Setor Auditado</label><select id="d5sSetor" onchange="atualizarDashboard5s()" class="inp"><option value="TODOS">Todos os Setores</option>
+            <option value="ÁREA DE APOIO">Área de Apoio</option>
+            <option value="EXPEDIÇÃO">Expedição</option>
+            <option value="MANUTENÇÃO">Manutenção</option>
+            <option value="PRODUÇÃO">Produção</option>
+            <option value="SUPRIMENTOS">Suprimentos</option></select></div>
+          <div><label class="lbl">Data Inicial</label><input type="date" id="d5sIni" onchange="atualizarDashboard5s()" class="inp"></div>
+          <div><label class="lbl">Data Final</label><input type="date" id="d5sFim" onchange="atualizarDashboard5s()" class="inp"></div>
+          <div><label class="lbl">Pesquisar</label><input type="text" id="d5sQuery" oninput="atualizarDashboard5s()" placeholder="Código, setor, subsetor..." class="inp"></div>
+        </div>
+      </div>
+
+      <div class="card sticky z-30 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 print:static" style="top: var(--hdr, 0px)">
+        <div id="pillsStatus5s" class="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]">
+          <span class="text-xs font-bold uppercase text-slate-400 mr-2 shrink-0">Status:</span>
+        </div>
+        <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs shrink-0" aria-label="Imprimir / PDF"><i class="fa-solid fa-print"></i><span class="hidden sm:inline">Imprimir / PDF</span></button>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="kpi"><div><span class="kpi-t">Total de Auditorias</span><div id="k5sTotal" class="kpi-v">0</div><span class="text-[11px] text-slate-500">Realizadas no período</span></div>
+          <div class="kpi-i bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"><i class="fa-solid fa-list-ol"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Índice 5S (média)</span><div id="k5sIndice" class="kpi-v text-emerald-600 dark:text-emerald-400">0 pts</div><span id="k5sIndiceClass" class="text-[11px] font-bold text-emerald-500">-</span></div>
+          <div class="kpi-i bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"><i class="fa-solid fa-chart-line"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Não Conformidades</span><div id="k5sNC" class="kpi-v text-rose-600 dark:text-rose-400">0</div><span id="k5sNCSub" class="text-[11px] text-rose-500 font-medium">0% do total exibido</span></div>
+          <div class="kpi-i bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Planos em Aberto</span><div id="k5sPlanos" class="kpi-v text-amber-600 dark:text-amber-400">0</div><span class="text-[11px] text-slate-500">Requerem acompanhamento</span></div>
+          <div class="kpi-i bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50"><i class="fa-solid fa-clock-rotate-left"></i></div></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-5">
+          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-[#166534]"></i><span>Distribuição Geral 5S</span></h3>
+          <div class="relative h-56"><canvas id="chart5Donut"></canvas></div>
+        </div>
+        <div class="card p-5 lg:col-span-2">
+          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-simple text-[#166534]"></i><span>Pontuação Média por Setor (pts)</span></h3>
+          <div class="relative h-56"><canvas id="chart5Barras"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card p-4 sm:p-6 space-y-4">
+        <div class="flex flex-col xl:flex-row xl:items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div>
+            <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#166534]"></i><span>Evolução Mensal da Pontuação 5S (pts)</span></h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Pontuação média das auditorias por mês. Respeita todos os filtros acima (setor, datas, pesquisa e status).</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#10b981]"></span>Subiu</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#ef4444]"></span>Caiu</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#64748b]"></span>Estável / 1º mês</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-amber-500"></span><span id="legMeta5s">Meta</span></span>
+            <div id="box5sVar" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs Mês Anterior:</span>
+              <span id="txt5sVar" class="text-sm font-extrabold">-</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
+          <div>
+            <p class="lbl">Pontuação por setor <span class="normal-case font-medium text-slate-400">(clique para filtrar)</span></p>
+            <div id="lista5sSetores" class="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0"></div>
+          </div>
+          <div class="min-w-0">
+            <div class="relative h-72"><canvas id="chart5Evol"></canvas></div>
+            <div id="top5sSubsetores" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-200 dark:border-slate-800"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+</main>
 </div>
 
 <!-- MODAL: CADASTRO -->
 <div id="modalCadastro" class="modal hidden">
   <div class="box max-w-lg">
-    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-folder-plus text-[#166534]"></i>Cadastrar Novo Item / Critério BPF</span>
-      <button onclick="fecharModalCadastro()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-folder-plus text-[#166534]"></i><span id="tituloCadastro">Cadastrar Novo Item / Critério BPF</span></span>
+      <button onclick="fecharModalCadastro()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button></div>
     <form id="formCadastroItem" onsubmit="salvarNovoCadastroItem(event)" class="p-6 space-y-4">
       <div><label class="lbl">Setor / Aba</label>
         <select id="cadSetor" class="inp" required>
@@ -266,7 +449,7 @@
         <div><label class="lbl">Subsetor</label><input type="text" id="cadSubsetor" placeholder="Ex: Resíduos, Estoque..." class="inp" required></div>
         <div><label class="lbl">Item / Código</label><input type="text" id="cadCodigo" placeholder="Ex: 2.2, 25.3" class="inp" required></div>
       </div>
-      <div><label class="lbl">Critério</label><textarea id="cadCriterio" rows="2" placeholder="Descrição detalhada do critério BPF..." class="inp" required></textarea></div>
+      <div id="cadCriterioWrap"><label class="lbl">Critério</label><textarea id="cadCriterio" rows="2" placeholder="Descrição detalhada do critério BPF..." class="inp" required></textarea></div>
       <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
         <button type="button" onclick="fecharModalCadastro()" class="btn btn-g">Cancelar</button>
         <button type="submit" class="btn btn-p">Salvar</button>
@@ -294,7 +477,7 @@
   <div class="box max-w-sm p-6 space-y-4">
     <div class="flex items-center gap-3 text-[#166534]"><i class="fa-solid fa-pen-to-square text-xl"></i>
       <h3 class="font-bold text-base text-slate-900 dark:text-white">Editar Registro</h3></div>
-    <input type="hidden" id="editIdRegistro">
+    <input type="hidden" id="editIdRegistro"><input type="hidden" id="editModulo" value="bpf">
     <div><label class="lbl">Avaliação BPF</label>
       <select id="editStatusConf" class="inp">
         <option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option><option value="NC c/ Ação Programada">NC c/ Ação Programada</option>
@@ -316,8 +499,8 @@
 <div id="modalAuditoria" class="modal hidden">
   <div class="box max-w-lg">
     <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-[#166534]"></i>Registrar Nova Inspeção BPF</span>
-      <button onclick="fecharModalAuditoria()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
-    <form id="formNovaAuditoria" onsubmit="salvarNovaAuditoria(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+      <button onclick="fecharModalAuditoria()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <form id="formNovaAuditoria" onsubmit="salvarNovaAuditoria(event)" class="p-6 space-y-4 max-h-[75dvh] overflow-y-auto">
       <input type="hidden" id="newSubsetor">
       <div><label class="lbl">Setor Auditado</label>
         <select id="newSetor" onchange="atualizarResponsavelSetor()" class="inp" required>
@@ -352,20 +535,90 @@
   </div>
 </div>
 
+
+<!-- MODAL: INICIAR NOVA AUDITORIA 5S -->
+<div id="modalNova5s" class="modal hidden">
+  <div class="box max-w-md">
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-[#166534]"></i>Iniciar nova auditoria 5S</span>
+      <button onclick="fecharModalNova5s()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <form id="formNova5s" onsubmit="iniciarAuditoria5s(event)" class="p-6 space-y-4">
+      <div><label class="lbl">Código do setor</label><input type="text" id="n5Codigo" oninput="autopreencher5s()" placeholder="Ex: A1, P1, S1" class="inp" autocomplete="off" required>
+        <p id="n5Aviso" class="hidden text-[11px] text-rose-500 mt-1">Código não encontrado. Cadastre-o em "Cadastro" primeiro.</p></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="lbl">Setor Auditado</label><input type="text" id="n5Setor" class="inp" placeholder="Preenchido pelo código" readonly></div>
+        <div><label class="lbl">Subsetor</label><input type="text" id="n5Subsetor" class="inp" placeholder="Preenchido pelo código" readonly></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="lbl">Data da Auditoria</label><input type="text" id="n5Data" class="inp" readonly></div>
+        <div><label class="lbl">Responsável</label><input type="text" id="n5Resp" class="inp" readonly></div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" onclick="fecharModalNova5s()" class="btn btn-g">Cancelar</button>
+        <button type="submit" class="btn btn-p"><i class="fa-solid fa-play"></i>Iniciar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: QUESTIONÁRIO 5S -->
+<div id="modalQuest5s" class="modal hidden !items-start sm:!items-center">
+  <div class="box max-w-3xl">
+    <div class="box-h"><span class="flex items-center gap-2 min-w-0"><i class="fa-solid fa-clipboard-list text-[#166534]"></i><span class="truncate">Auditoria 5S · <span id="qTitulo"></span></span></span>
+      <button onclick="fecharQuest5s()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <div id="qCorpo" class="p-4 sm:p-6 space-y-4 max-h-[68dvh] overflow-y-auto"></div>
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/50">
+      <div id="qTotal" class="text-sm font-extrabold">Pontuação: 0 / 30</div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="fecharQuest5s()" class="btn btn-g">Cancelar</button>
+        <button onclick="visualizarQuest5s()" class="btn btn-s"><i class="fa-solid fa-eye"></i>Visualizar</button>
+        <button onclick="salvarQuest5s()" class="btn btn-p"><i class="fa-solid fa-floppy-disk"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ATRIBUIR NOTA -->
+<div id="modalNota5s" class="modal hidden !z-[65]">
+  <div class="box max-w-sm p-6 space-y-4">
+    <div class="flex items-center gap-3 text-[#166534]"><i class="fa-solid fa-star-half-stroke text-xl"></i><h3 class="font-bold text-base text-slate-900 dark:text-white">Atribuir nota</h3></div>
+    <p id="notaParam" class="text-xs text-slate-500 dark:text-slate-400"></p>
+    <div><label class="lbl">Pontuação possível</label><div id="notaChips" class="flex flex-wrap gap-2"></div></div>
+    <div><label class="lbl">Observação</label><textarea id="notaObs" rows="3" class="inp" placeholder="Opcional: descreva o que foi observado..."></textarea></div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+      <button onclick="cancelarNota5s()" class="btn btn-g">Cancelar</button>
+      <button onclick="confirmarNota5s()" class="btn btn-p">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISUALIZAÇÃO DO PDF -->
+<div id="previewPDF" class="hidden fixed inset-0 z-[70] bg-slate-950/90 overflow-auto p-3 sm:p-6">
+  <div class="pdf-toolbar max-w-[1100px] mx-auto mb-3 flex flex-wrap items-center justify-between gap-2">
+    <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-file-pdf text-rose-400"></i>Visualização do PDF</h3>
+    <div class="flex gap-2">
+      <button onclick="fecharPreview5s()" class="btn btn-s">Fechar</button>
+      <button onclick="imprimirPreview5s()" class="btn btn-p"><i class="fa-solid fa-print"></i>Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+  <div id="pdfSheet" class="pdf-sheet mx-auto"></div>
+</div>
+
 <script>
 /* ================= LOGIN ================= */
 function realizarLogin(e) {
   e.preventDefault();
-  const usuario = document.getElementById("inputUsuario").value.trim();
-  const senha = document.getElementById("inputSenha").value;
+  const usuario = $("inputUsuario").value.trim();
+  const senha = $("inputSenha").value;
   if (usuario === "ANDRESSACASS" && senha === "Srhokage@11") {
-    document.getElementById("telaLogin").classList.add("hidden");
-    document.getElementById("appPrincipal").classList.remove("hidden");
-    document.getElementById("appPrincipal").classList.add("flex");
+    $("telaLogin").classList.add("hidden");
+    $("appPrincipal").classList.remove("hidden");
+    $("appPrincipal").classList.add("flex");
+    ajustarAlturaHeader();
+    [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(ch => ch && ch.resize());
   } else {
-    document.getElementById("erroLogin").classList.remove("hidden");
-    document.getElementById("inputSenha").value = "";
-    document.getElementById("inputSenha").focus();
+    $("erroLogin").classList.remove("hidden");
+    $("inputSenha").value = "";
+    $("inputSenha").focus();
   }
 }
 
@@ -400,7 +653,7 @@ const registrosSeed = [
   { id: "BPF-106", data: "2026-10-01", setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "12.0", criterio: "Uso completo e correto de EPIs e vestimentas limpas pelos operadores", statusExec: "Concluído", statusConf: "Conforme", responsavel: "João Vinicius", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
   { id: "BPF-107", data: "2026-10-03", setor: "ÁREA DE APOIO", subsetor: "RESIDUOS RECICLAVEIS", codigo: "2.1", criterio: "Validação da limpeza e sanitização do sistema CIP na linha de sucos", statusExec: "Pendente", statusConf: "Não Conforme", responsavel: "Fernanda Turella", prazoDias: 5, vencimento: "2026-10-08", acao: "Refazer ciclo de sanitização alcalina e re-testar swab de superfície", observacoes: "Swab deu positivo em contagem." },
   { id: "BPF-108", data: "2026-10-05", setor: "MANUTENÇÃO", subsetor: "MANUTENÇÃO", codigo: "8.1", criterio: "Aferição e calibração periódica dos termômetros de controle do pasteurizador", statusExec: "Concluído", statusConf: "Conforme", responsavel: "Marivon", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
-  { id: "BPF-109", data: "2026-10-08", setor: "SUPRIMENTOS", subsetor: "ÁREA DE PALETES", codigo: "1.0", criterio: "Integridade dos estrados e distanciamento de pallets em relação às paredes", statusExec: "Em Andamento", statusConf: "NC c/ Ação Programada", responsavel: "Sebastião / Leandro", prazoDias: 10, vencimento: "2026-10-18", acao: "Afastar estantes do setor B2 a 50cm da parede", observacoes: "" }
+  { id: "BPF-109", data: "2026-10-08", setor: "SUPRIMENTOS", subsetor: "AREA DE PALETES", codigo: "1.0", criterio: "Integridade dos estrados e distanciamento de pallets em relação às paredes", statusExec: "Em Andamento", statusConf: "NC c/ Ação Programada", responsavel: "Sebastião / Leandro", prazoDias: 10, vencimento: "2026-10-18", acao: "Afastar estantes do setor B2 a 50cm da parede", observacoes: "" }
 ];
 
 let baseCriterios = structuredClone(baseSeed);
@@ -410,14 +663,17 @@ let pendenciaTempData = null;
 let chartDonutObj = null, chartBarrasObj = null, chartEvolucaoObj = null;
 
 /* ================= UTILITÁRIOS ================= */
+// Escapa HTML para evitar XSS ao usar innerHTML
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, "0");
 
+// Data de hoje no fuso LOCAL (toISOString usaria UTC e erraria à noite no Brasil)
 function hojeLocal() {
   const d = new Date();
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
+// Soma dias a uma data "AAAA-MM-DD" sem problemas de fuso
 function somarDias(dataStr, dias) {
   const [a, m, d] = dataStr.split("-").map(Number);
   const dt = new Date(a, m - 1, d + dias);
@@ -428,13 +684,21 @@ function formatarData(s) {
   const p = s.split("-");
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
 }
+// Próximo ID = maior existente + 1 (evita duplicar após excluir)
 function proximoId() {
   const max = registrosAuditoria.reduce((m, r) => Math.max(m, parseInt(String(r.id).split("-")[1]) || 0), 100);
   return `BPF-${max + 1}`;
 }
 function lerPrazo(valor, padrao) {
   const n = parseInt(valor, 10);
-  return Number.isNaN(n) || n < 0 ? padrao : n;
+  return Number.isNaN(n) || n < 0 ? padrao : n; // aceita 0
+}
+const META_BPF = 95; // meta de conformidade (nível "Excelente")
+// Verde = subiu, vermelho = caiu, cinza = estável / primeiro mês
+function corVariacao(valores, i) {
+  if (i === 0) return "#64748b";
+  const diff = valores[i] - valores[i - 1];
+  return diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#64748b";
 }
 const getNomeMesAbrev = m => ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][m - 1] || "";
 
@@ -443,7 +707,7 @@ function salvarDados() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ registros: registrosAuditoria, base: baseCriterios }));
   } catch (e) {
-    alert("Não foi possível salvar no navegador (armazenamento cheio ou bloqueado).");
+    alert("Não foi possível salvar no navegador (armazenamento cheio ou bloqueado). Tente remover fotos antigas.");
   }
 }
 function carregarDados() {
@@ -453,16 +717,20 @@ function carregarDados() {
     const d = JSON.parse(raw);
     if (Array.isArray(d.registros)) registrosAuditoria = d.registros;
     if (Array.isArray(d.base)) baseCriterios = d.base;
+    // Migração: dados salvos antes com "AREA DE APOIO" (sem acento) passam a "ÁREA DE APOIO"
+    [...registrosAuditoria, ...baseCriterios].forEach(o => { if (o && o.setor === "AREA DE APOIO") o.setor = "ÁREA DE APOIO"; });
   } catch (e) { console.warn("Falha ao carregar dados salvos:", e); }
 }
 
 /* ================= TEMA / NAVEGAÇÃO ================= */
-function aplicarTemaGraficos() {
+// animar=false redesenha na hora (necessário na impressão, senão o navegador captura as cores antigas)
+function aplicarTemaGraficos(animar = true) {
   const dark = document.documentElement.classList.contains("dark");
   Chart.defaults.color = dark ? "#94a3b8" : "#475569";
-  Chart.defaults.borderColor = dark ? "#1e293b" : "#e2e8f0";
+  // Linhas de grade na mesma cor dos números de porcentagem (rótulos dos eixos), com transparência para não pesar
+  Chart.defaults.borderColor = dark ? "rgba(148,163,184,.35)" : "rgba(71,85,105,.35)";
   if (chartDonutObj) chartDonutObj.data.datasets[0].borderColor = dark ? "#0f172a" : "#ffffff";
-  [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update());
+  [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update(animar ? undefined : "none"));
 }
 function alternarModoEscuro() {
   const html = document.documentElement;
@@ -470,9 +738,10 @@ function alternarModoEscuro() {
   $("iconeTema").className = html.classList.contains("dark") ? "fa-solid fa-sun text-sm" : "fa-solid fa-moon text-sm";
   aplicarTemaGraficos();
 }
+// Impressão sempre em tema claro
 let eraDark = false;
-window.addEventListener("beforeprint", () => { eraDark = document.documentElement.classList.contains("dark"); document.documentElement.classList.remove("dark"); aplicarTemaGraficos(); });
-window.addEventListener("afterprint", () => { if (eraDark) document.documentElement.classList.add("dark"); aplicarTemaGraficos(); });
+window.addEventListener("beforeprint", () => { eraDark = document.documentElement.classList.contains("dark"); document.documentElement.classList.remove("dark"); aplicarTemaGraficos(false); });
+window.addEventListener("afterprint", () => { if (eraDark) document.documentElement.classList.add("dark"); aplicarTemaGraficos(false); });
 
 function toggleMenuModulos(e) { e.stopPropagation(); $("menuModulos").classList.toggle("hidden"); }
 document.addEventListener("click", () => $("menuModulos").classList.add("hidden"));
@@ -482,12 +751,11 @@ function selecionarModulo(mod) {
   if (mod === "bpf") mudarTela("lancamentos");
   else alert("O módulo selecionado está em desenvolvimento e estará disponível em breve.");
 }
-
 function mudarTela(tela) {
   const lanc = tela === "lancamentos";
   $("telaLancamentos").classList.toggle("hidden", !lanc);
   $("telaDashboard").classList.toggle("hidden", lanc);
-  const base = "btn !px-3 !py-1.5 text-xs ";
+  const base = "btn !px-3 !py-1.5 text-xs w-full md:w-auto ";
   $("btnNavLancamentos").className = base + (lanc ? "nav-on" : "nav-off");
   $("btnNavDashboard").className = base + (lanc ? "nav-off" : "nav-on");
   if (!lanc) atualizarDashboard();
@@ -516,7 +784,7 @@ function renderizarTabelaLancamentos() {
   $("counterLancamentos").innerText = `Exibindo ${filtrados.length} de ${registrosAuditoria.length} registros`;
 
   if (!filtrados.length) {
-    $("tbodyLancamentos").innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`;
+    $("tbodyLancamentos").innerHTML = `<tr><td colspan="7" data-label="" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`;
     return;
   }
 
@@ -524,29 +792,30 @@ function renderizarTabelaLancamentos() {
     const aberto = i.statusExec === "Pendente" || i.statusExec === "Em Andamento";
     const vencido = aberto && i.vencimento && i.vencimento < hoje;
     const andamento = i.statusConf === "NC c/ Ação Programada" || i.statusExec === "Em Andamento";
-    const rowClass = vencido ? "row-vencido" : andamento ? "row-andamento" : "hover:bg-slate-50 dark:hover:bg-slate-900/50 transition";
+    // Em andamento (amarelo) tem prioridade; o atraso continua em vermelho na coluna Prazo
+    const rowClass = andamento ? "row-andamento" : vencido ? "row-vencido" : "hover:bg-slate-50 dark:hover:bg-slate-900/50 transition";
     const id = esc(i.id);
     return `
       <tr class="${rowClass}">
-        <td class="p-3.5"><div class="font-bold">${esc(i.codigo)}</div><div class="text-[11px] text-slate-400">${formatarData(i.data)}</div></td>
-        <td class="p-3.5"><div class="font-semibold text-slate-700 dark:text-slate-300">${esc(i.setor)}</div><div class="text-[11px] text-slate-400">${esc(i.subsetor)}</div></td>
-        <td class="p-3.5 max-w-xs">
+        <td class="p-3.5" data-label="Código / Data"><div class="cel"><div class="font-bold">${esc(i.codigo)}</div><div class="text-[11px] text-slate-400">${formatarData(i.data)}</div></div></td>
+        <td class="p-3.5" data-label="Setor / Subsetor"><div class="cel"><div class="font-semibold text-slate-700 dark:text-slate-300">${esc(i.setor)}</div><div class="text-[11px] text-slate-400">${esc(i.subsetor)}</div></div></td>
+        <td class="p-3.5 max-w-xs" data-label="Critério"><div class="cel">
           <p class="text-xs font-medium leading-relaxed">${esc(i.criterio)}</p>
           ${i.observacoes ? `<p class="text-[11px] text-slate-400 mt-1 italic">Obs: ${esc(i.observacoes)}</p>` : ""}
-        </td>
-        <td class="p-3.5 text-center">${getStatusBadgeHTML(i.statusExec)}</td>
-        <td class="p-3.5 text-center">${getBadgeHTML(i.statusConf)}</td>
-        <td class="p-3.5 text-xs">
+        </div></td>
+        <td class="p-3.5 text-center" data-label="Status"><div class="cel">${getStatusBadgeHTML(i.statusExec)}</div></td>
+        <td class="p-3.5 text-center" data-label="Avaliação BPF"><div class="cel">${getBadgeHTML(i.statusConf)}</div></td>
+        <td class="p-3.5 text-xs" data-label="Prazo / Vencimento"><div class="cel">
           ${i.statusExec !== "Concluído" ? `
             <div class="font-bold ${vencido ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}">${i.prazoDias ?? 0} dias</div>
             <div class="text-[10px] ${vencido ? "text-rose-500 font-semibold" : "text-slate-400"}">${vencido ? "VENCIDO (" + formatarData(i.vencimento) + ")" : "Vence: " + formatarData(i.vencimento)}</div>
           ` : '<span class="text-slate-400">-</span>'}
-        </td>
-        <td class="p-3.5 text-center no-print whitespace-nowrap">
-          ${i.foto ? `<button onclick="verFoto('${id}')" title="Ver foto" class="p-2 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-image"></i></button>` : ""}
-          <button onclick="abrirEdicaoRapida('${id}')" title="Editar" class="p-2 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
-          <button onclick="excluirRegistro('${id}')" title="Excluir" class="p-2 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
-        </td>
+        </div></td>
+        <td class="p-3.5 text-center no-print whitespace-nowrap" data-label="Ações"><div class="cel">
+          ${i.foto ? `<button onclick="verFoto('${id}')" title="Ver foto" class="p-2.5 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-image"></i></button>` : ""}
+          <button onclick="abrirEdicaoRapida('${id}')" title="Editar" class="p-2.5 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
+          <button onclick="excluirRegistro('${id}')" title="Excluir" class="p-2.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+        </div></td>
       </tr>`;
   }).join("");
 }
@@ -558,6 +827,7 @@ function verFoto(id) {
   $("modalFoto").classList.remove("hidden");
 }
 
+/* ----- Edição rápida ----- */
 function abrirEdicaoRapida(id) {
   const i = registrosAuditoria.find(r => r.id === id);
   if (!i) return;
@@ -596,6 +866,7 @@ function excluirRegistro(id) {
   atualizarDashboard();
 }
 
+/* ----- Nova auditoria ----- */
 function abrirModalNovaAuditoria() {
   $("newData").value = hojeLocal();
   $("modalAuditoria").classList.remove("hidden");
@@ -618,6 +889,7 @@ function autopreencherDados() {
     $("newResponsavel").value = responsaveisSetor[achado.setor] || "Responsável Setorial";
     $("avisoCodigo").classList.add("hidden");
   } else {
+    // Limpa para não manter critério de um código anterior
     $("newSubsetor").value = "";
     $("newCriterio").value = "";
     $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
@@ -631,6 +903,7 @@ function atualizarNomeFoto(input) {
   $("labelFoto").innerText = input.files && input.files[0] ? input.files[0].name : "Clique para tirar foto ou anexar...";
 }
 
+// Redimensiona e comprime a foto (máx. 800px, JPEG) para caber no localStorage
 function lerFoto(file) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
@@ -639,10 +912,10 @@ function lerFoto(file) {
       const img = new Image();
       img.onerror = reject;
       img.onload = () => {
-        const fator = Math.min(1, 800 / Math.max(img.width, img.height));
+        const esc = Math.min(1, 800 / Math.max(img.width, img.height));
         const c = document.createElement("canvas");
-        c.width = Math.round(img.width * fator);
-        c.height = Math.round(img.height * fator);
+        c.width = Math.round(img.width * esc);
+        c.height = Math.round(img.height * esc);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
         resolve(c.toDataURL("image/jpeg", 0.7));
       };
@@ -656,12 +929,14 @@ async function salvarNovaAuditoria(e) {
   e.preventDefault();
   const setor = $("newSetor").value;
   const data = $("newData").value;
+  const codigo = $("newCodigo").value.trim();
   const criterio = $("newCriterio").value;
   const statusConf = $("newStatusConf").value;
   const responsavel = $("newResponsavel").value;
   const observacoes = $("newObservacoes").value.trim();
   const subsetor = $("newSubsetor").value || "Geral";
 
+  // 'readonly' não é validado pelo navegador, então validamos aqui
   if (!criterio) { alert("Código não encontrado: o critério está vazio. Use um código cadastrado."); return; }
   if (!setor || !responsavel) { alert("Selecione o setor."); return; }
 
@@ -676,7 +951,7 @@ async function salvarNovaAuditoria(e) {
   if (statusConf === "Não Conforme") { statusExec = "Pendente"; prazoDias = 5; }
   else if (statusConf === "NC c/ Ação Programada") { statusExec = "Em Andamento"; prazoDias = 10; }
 
-  const reg = { data, setor, subsetor, codigo: $("newCodigo").value.trim(), criterio, statusExec, statusConf, responsavel, prazoDias, vencimento: "", acao: "-", observacoes, foto };
+  const reg = { data, setor, subsetor, codigo, criterio, statusExec, statusConf, responsavel, prazoDias, vencimento: "", acao: "-", observacoes, foto };
 
   if (statusConf === "Conforme") {
     registrosAuditoria.unshift({ id: proximoId(), ...reg });
@@ -711,6 +986,7 @@ function cancelarPrazoPendente() {
   $("modalPrazo").classList.add("hidden");
 }
 
+/* ----- Cadastro de critérios ----- */
 function abrirModalCadastro() { $("modalCadastro").classList.remove("hidden"); }
 function fecharModalCadastro() { $("modalCadastro").classList.add("hidden"); $("formCadastroItem").reset(); }
 function salvarNovoCadastroItem(e) {
@@ -774,27 +1050,27 @@ function atualizarDashboard() {
   const fim = $("dashFilterDataFim").value;
   const q = $("dashFilterQuery").value.toLowerCase().trim();
 
-  const base = registrosAuditoria.filter(i =>
-    (setor === "TODOS" || i.setor === setor) &&
-    (!ini || i.data >= ini) && (!fim || i.data <= fim) &&
-    (!q || i.criterio.toLowerCase().includes(q) || i.responsavel.toLowerCase().includes(q))
-  );
-
-  const dados = base.filter(i => {
+  // "comum" = data, pesquisa e status (usado no painel de setores, que funciona como segmentação)
+  const comum = registrosAuditoria.filter(i => {
+    if (ini && i.data < ini) return false;
+    if (fim && i.data > fim) return false;
+    if (q && !(i.criterio.toLowerCase().includes(q) || i.responsavel.toLowerCase().includes(q))) return false;
     if (["Conforme", "Não Conforme", "NC c/ Ação Programada"].includes(filtroStatusAtual)) return i.statusConf === filtroStatusAtual;
     if (["Concluído", "Pendente", "Em Andamento"].includes(filtroStatusAtual)) return i.statusExec === filtroStatusAtual;
     return true;
   });
+  // "dados" = comum + setor selecionado (usado em KPIs e em todos os gráficos)
+  const dados = comum.filter(i => setor === "TODOS" || i.setor === setor);
 
   const total = dados.length;
   const conf = dados.filter(d => d.statusConf === "Conforme").length;
   const nc = dados.filter(d => d.statusConf === "Não Conforme").length;
   const acaoProg = dados.filter(d => d.statusConf === "NC c/ Ação Programada").length;
-  const ncTotal = nc + acaoProg;
+  const ncTotal = nc + acaoProg; // as duas são não conformidades
   const pend = dados.filter(d => d.statusExec === "Pendente" || d.statusExec === "Em Andamento").length;
 
-  const idx = total ? Math.round((conf / total) * 100) : 0;
-  const pctNC = total ? Math.round((ncTotal / total) * 100) : 0;
+  const idx = total ? Math.round(conf / total * 100) : 0;
+  const pctNC = total ? Math.round(ncTotal / total * 100) : 0;
 
   let cls = ["Insatisfatório", "text-rose-500"];
   if (idx >= 95) cls = ["Excelente", "text-emerald-500"];
@@ -812,10 +1088,17 @@ function atualizarDashboard() {
 
   if (chartDonutObj) { chartDonutObj.data.datasets[0].data = [conf, nc, acaoProg]; chartDonutObj.update(); }
   atualizarGraficoBarras(dados);
-  atualizarGraficoEvolucaoLinha(base);
+  atualizarGraficoEvolucaoLinha(dados);
+  atualizarPainelSetores(comum, setor);
+  atualizarTopSubsetores(dados);
 }
 
 function inicializarGraficos() {
+  // Nitidez: canvas em no mínimo 2x (telas comuns também ficam definidas) e mesma fonte do sistema
+  Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.font.weight = 500;
   aplicarTemaGraficos();
   const dark = document.documentElement.classList.contains("dark");
 
@@ -833,9 +1116,9 @@ function inicializarGraficos() {
     data: {
       labels: ["Área de Apoio", "Expedição", "Manutenção", "Produção", "Suprimentos"],
       datasets: [
-        { label: "Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#166534", borderRadius: 4 },
-        { label: "Não Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#ef4444", borderRadius: 4 },
-        { label: "Ação Programada", data: [0, 0, 0, 0, 0], backgroundColor: "#f59e0b", borderRadius: 4 }
+        { label: "Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#166534", borderRadius: 8, borderSkipped: false },
+        { label: "Não Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#ef4444", borderRadius: 8, borderSkipped: false },
+        { label: "Ação Programada", data: [0, 0, 0, 0, 0], backgroundColor: "#f59e0b", borderRadius: 8, borderSkipped: false }
       ]
     },
     options: {
@@ -849,25 +1132,135 @@ function inicializarGraficos() {
     type: "line",
     data: {
       labels: [],
-      datasets: [{
-        label: "Taxa BPF (%)", data: [], borderColor: "#16a34a", backgroundColor: "#16a34a",
-        borderWidth: 2.5, pointBackgroundColor: "#16a34a", pointBorderColor: "#ffffff", pointBorderWidth: 2,
-        pointRadius: 5, pointHoverRadius: 7, tension: 0.2
-      }]
+      datasets: [
+        {
+          label: "Taxa BPF (%)", data: [], order: 1,
+          borderWidth: 3, borderColor: "#64748b", borderCapStyle: "round", borderJoinStyle: "round",
+          cubicInterpolationMode: "monotone", // curva suave sem ultrapassar 0–100%
+          pointRadius: 5, pointHoverRadius: 8, pointBorderColor: "#ffffff", pointBorderWidth: 2, pointBackgroundColor: [],
+          // Cada trecho: verde se subiu, vermelho se caiu, cinza se igual
+          segment: { borderColor: c => c.p1.parsed.y > c.p0.parsed.y ? "#10b981" : c.p1.parsed.y < c.p0.parsed.y ? "#ef4444" : "#64748b" }
+        },
+        { label: `Meta (${META_BPF}%)`, data: [], order: 0, borderColor: "#f59e0b", borderWidth: 2, borderDash: [4, 8], borderCapStyle: "round", pointRadius: 0, pointHoverRadius: 0 }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Conformidade BPF: ${c.parsed.y}%` } } }
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          padding: 10,
+          filter: c => c.datasetIndex === 0, // não mostra a linha de meta na janela
+          callbacks: {
+            label: c => `Conformidade BPF: ${c.parsed.y}%`,
+            // Variação em relação ao mês anterior (positiva ou negativa)
+            afterLabel: c => {
+              if (c.dataIndex === 0) return "Primeiro mês auditado";
+              const diff = c.parsed.y - c.dataset.data[c.dataIndex - 1];
+              if (diff > 0) return `▲ +${diff}% vs mês anterior`;
+              if (diff < 0) return `▼ ${diff}% vs mês anterior`;
+              return "● 0% vs mês anterior (estável)";
+            },
+            labelColor: c => {
+              const cor = corVariacao(c.dataset.data, c.dataIndex);
+              return { borderColor: cor, backgroundColor: cor };
+            }
+          }
+        }
+      }
     }
   });
+}
+
+const NOME_SETOR = { "ÁREA DE APOIO": "Área de Apoio", "EXPEDIÇÃO": "Expedição", "MANUTENÇÃO": "Manutenção", "PRODUÇÃO": "Produção", "SUPRIMENTOS": "Suprimentos" };
+function corIndice(p) { return p >= 95 ? "#10b981" : p >= 90 ? "#34d399" : p >= 80 ? "#f59e0b" : "#ef4444"; }
+
+// Subsetor "oficial": busca no cadastro pelo setor + código (evita nomes diferentes para o mesmo subsetor)
+function subsetorDe(r) {
+  const c = baseCriterios.find(x => x.setor === r.setor && x.codigo === r.codigo);
+  return (c ? c.subsetor : r.subsetor) || "Geral";
+}
+
+function contar(lista) {
+  const nc = lista.filter(r => r.statusConf === "Não Conforme").length;
+  const acao = lista.filter(r => r.statusConf === "NC c/ Ação Programada").length;
+  return { total: lista.length, conf: lista.filter(r => r.statusConf === "Conforme").length, nc, acao, neg: nc + acao };
+}
+
+// Card padrão (usado nos setores e nos subsetores): nome, %, barra e as 3 quantidades
+function cardIndicador({ nome, sub, pct, cor, tem = true, c, onclick, ativo }) {
+  const ponto = (cl, n, rot) => `<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${cl}"></span>${n} ${rot}</span>`;
+  const corpo = `
+    <div class="flex items-center justify-between gap-2 text-xs">
+      <span class="flex items-baseline gap-1.5 min-w-0">
+        <span class="font-semibold truncate">${esc(nome)}</span>
+        ${sub ? `<span class="text-[10px] text-slate-400 truncate">· ${esc(sub)}</span>` : ""}
+      </span>
+      <span class="font-extrabold shrink-0" style="color:${cor}">${tem ? pct + "%" : "—"}</span>
+    </div>
+    <div class="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full" style="width:${tem ? pct : 0}%;background:${cor}"></div></div>
+    <div class="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-slate-400 mt-1.5">
+      ${tem ? ponto("bg-emerald-500", c.conf, "conforme") + ponto("bg-rose-500", c.nc, "não conforme") + ponto("bg-amber-500", c.acao, "ação programada") : "sem registros"}
+    </div>`;
+  const cls = "block w-full text-left rounded-lg border px-3 py-2 transition " +
+    (ativo ? "border-[#166534] bg-emerald-50 dark:bg-emerald-950/40" : "border-slate-200 dark:border-slate-800") +
+    (onclick && !ativo ? " hover:bg-slate-50 dark:hover:bg-slate-800/50" : "");
+  return onclick
+    ? `<button type="button" onclick="${onclick}" class="${cls}">${corpo}</button>`
+    : `<div class="${cls}" title="${esc(sub ? nome + " · " + sub : nome)}">${corpo}</div>`;
+}
+
+function atualizarPainelSetores(registros, setorSel) {
+  $("listaSetores").innerHTML = SETORES.map(s => {
+    const c = contar(registros.filter(r => r.setor === s));
+    const tem = c.total > 0;
+    const pct = tem ? Math.round(c.conf / c.total * 100) : 0;
+    return cardIndicador({ nome: NOME_SETOR[s], pct, cor: tem ? corIndice(pct) : "#64748b", tem, c, onclick: `selecionarSetorPainel('${s}')`, ativo: s === setorSel });
+  }).join("");
+}
+
+// Top 5 subsetores: conformes, não conformes e com ação programada (respeita todos os filtros)
+function atualizarTopSubsetores(dados) {
+  const mapa = {};
+  dados.forEach(r => {
+    const sub = subsetorDe(r);
+    const k = r.setor + "|" + sub;
+    (mapa[k] = mapa[k] || { sub, setor: r.setor, lista: [] }).lista.push(r);
+  });
+  const grupos = Object.values(mapa).map(g => ({ ...g, c: contar(g.lista) }));
+  const pctDe = (g, campo) => Math.round(g.c[campo] / g.c.total * 100);
+
+  const colunas = [
+    { rotulo: "Top 5 subsetores · Conformes", dica: "Maior % de itens conformes", icone: "fa-circle-check text-emerald-500", campo: "conf", cor: () => "#10b981", vazio: "Nenhum subsetor conforme neste filtro." },
+    { rotulo: "Top 5 subsetores · Não conformes", dica: "Maior % de não conformidades (inclui as com ação programada)", icone: "fa-circle-xmark text-rose-500", campo: "neg", cor: () => "#ef4444", vazio: "Nenhuma não conformidade neste filtro." },
+    { rotulo: "Top 5 subsetores · Ação programada", dica: "Maior % de itens com ação programada", icone: "fa-clock text-amber-500", campo: "acao", cor: () => "#f59e0b", vazio: "Nenhuma ação programada neste filtro." }
+  ];
+
+  $("topSubsetores").innerHTML = colunas.map(col => {
+    const top = grupos
+      .filter(g => g.c[col.campo] > 0)
+      .sort((a, b) => pctDe(b, col.campo) - pctDe(a, col.campo) || b.c[col.campo] - a.c[col.campo] || b.c.total - a.c.total)
+      .slice(0, 5);
+    const cards = top.length
+      ? top.map(g => { const p = pctDe(g, col.campo); return cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: p, cor: col.cor(p), c: g.c }); }).join("")
+      : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
+    return `<div class="min-w-0"><p class="lbl flex items-center gap-1.5" title="${col.dica}"><i class="fa-solid ${col.icone}"></i>${col.rotulo}</p><div class="space-y-2">${cards}</div></div>`;
+  }).join("");
+}
+// Clique no setor = segmentação (clicar de novo limpa)
+function selecionarSetorPainel(s) {
+  const sel = $("dashFilterSetor");
+  sel.value = sel.value === s ? "TODOS" : s;
+  atualizarDashboard();
 }
 
 function atualizarGraficoBarras(dados) {
   if (!chartBarrasObj) return;
   const pct = (s, status) => {
     const sub = dados.filter(d => d.setor === s);
-    return sub.length ? Math.round((sub.filter(d => d.statusConf === status).length / sub.length) * 100) : 0;
+    return sub.length ? Math.round(sub.filter(d => d.statusConf === status).length / sub.length * 100) : 0;
   };
   chartBarrasObj.data.datasets[0].data = SETORES.map(s => pct(s, "Conforme"));
   chartBarrasObj.data.datasets[1].data = SETORES.map(s => pct(s, "Não Conforme"));
@@ -889,10 +1282,12 @@ function atualizarGraficoEvolucaoLinha(registros) {
 
   const chaves = Object.keys(meses).sort();
   const labels = chaves.map(k => { const [a, m] = k.split("-"); return `${getNomeMesAbrev(+m)}/${a.slice(2)}`; });
-  const valores = chaves.map(k => Math.round((meses[k].conf / meses[k].total) * 100));
+  const valores = chaves.map(k => Math.round(meses[k].conf / meses[k].total * 100));
 
   chartEvolucaoObj.data.labels = labels;
   chartEvolucaoObj.data.datasets[0].data = valores;
+  chartEvolucaoObj.data.datasets[0].pointBackgroundColor = valores.map((_, i) => corVariacao(valores, i));
+  chartEvolucaoObj.data.datasets[1].data = valores.map(() => META_BPF);
   chartEvolucaoObj.update();
 
   const txt = $("txtVariacaoPct"), box = $("boxVariacaoMes");
@@ -916,12 +1311,25 @@ function atualizarGraficoEvolucaoLinha(registros) {
 }
 
 /* ================= INICIALIZAÇÃO ================= */
+// Mede a altura do cabeçalho (que pode quebrar linha no celular) para a barra de status grudar logo abaixo
+function ajustarAlturaHeader() {
+  const h = document.querySelector("header");
+  const fixo = getComputedStyle(h).position === "sticky"; // no celular o cabeçalho rola junto com a página
+  document.documentElement.style.setProperty("--hdr", (fixo ? h.offsetHeight : 0) + "px");
+}
+window.addEventListener("resize", ajustarAlturaHeader);
+new ResizeObserver(ajustarAlturaHeader).observe(document.querySelector("header"));
+
 document.addEventListener("DOMContentLoaded", () => {
+  ajustarAlturaHeader();
   carregarDados();
   renderizarPillsStatus();
+  mudarTela("lancamentos");
   renderizarTabelaLancamentos();
   inicializarGraficos();
   atualizarDashboard();
+  // Redesenha os gráficos quando a fonte Inter terminar de carregar (evita texto borrado/trocado)
+  if (document.fonts) document.fonts.ready.then(() => [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update("none")));
 });
 </script>
 </body>
