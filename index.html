@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>tailwind.config = { darkMode: 'class' }</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
@@ -141,7 +142,7 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2">
           <a href="#" id="mod-bpf" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
           <a href="#" id="mod-5s" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
-          <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-triangle-exclamation text-slate-400"></i><span>NÃO CONFORMIDADES</span></a>
+          <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-box-archive text-slate-400"></i><span>CONTROLE RETIDOS</span></a>
         </div>
       </div>
     </div>
@@ -152,14 +153,16 @@
       <h1 class="mt-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[.2em] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span id="tituloModulo">Auditoria BPF</span></h1>
     </div>
 
-    <!-- Controles Direitos (Backup + Tema) -->
+    <!-- Controles Direitos (Backup ZIP + Tema) -->
     <div class="contents md:flex md:items-center md:justify-end md:justify-self-end md:gap-2">
       <div class="col-span-3 row-start-2 grid grid-cols-2 gap-2 md:col-span-1 md:row-start-auto md:flex md:items-center">
         <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-list-check"></i> <span id="lblLanc">Lançamentos</span></button>
         <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-chart-pie"></i> <span id="lblDashboard">Dashboard BPF</span></button>
       </div>
       <div class="col-start-3 row-start-1 md:col-start-auto md:row-start-auto justify-self-end flex items-center gap-2">
-        <button onclick="executarBackupManual()" class="p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Backup Automático Ativo (Clique para exportar JSON)"><i class="fa-solid fa-cloud-arrow-down text-sm text-[#166534]"></i></button>
+        <button onclick="executarBackupZipCompleto()" class="p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Baixar Backup Completo em ZIP (HTML + Lançamentos + Fotos)" aria-label="Baixar Backup ZIP">
+          <i class="fa-solid fa-file-zipper text-sm text-[#166534]"></i>
+        </button>
         <button onclick="alternarModoEscuro()" class="p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema" aria-label="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
       </div>
     </div>
@@ -763,7 +766,6 @@ function carregarDados() {
       if (Array.isArray(d.auditorias)) auditorias5s = d.auditorias;
       if (Array.isArray(d.base)) base5s = d.base;
     } else {
-      // Seed inicial 5S caso não exista
       auditorias5s = [
         seed5s("5S-101", "2026-06-12", "PRODUÇÃO", "ROTULAGEM", "P1", [3,3,3,3,3,3,3,3,3,3]),
         seed5s("5S-102", "2026-07-08", "ÁREA DE APOIO", "RESIDUOS RECICLAVEIS", "A1", [3,1.5,3,0,3,3,0,0,3,0]),
@@ -776,15 +778,58 @@ function carregarDados() {
   } catch (e) { console.warn("Falha ao carregar dados:", e); }
 }
 
-// Botão de Backup Manual
-function executarBackupManual() {
+/* ================= BACKUP ZIP COMPLETO (HTML + DADOS + FOTOS) ================= */
+async function executarBackupZipCompleto() {
   salvarDados();
-  const dados = { bpf: { registros: registrosAuditoria, base: baseCriterios }, s5: { auditorias: auditorias5s, base: base5s }, dataExportacao: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `backup-sistema-auditorias-${hojeLocal()}.json`;
-  a.click(); URL.revokeObjectURL(url);
+  if (typeof JSZip === "undefined") {
+    alert("Biblioteca de compactação ZIP ainda está sendo carregada. Tente novamente em instantes.");
+    return;
+  }
+
+  const zip = new JSZip();
+
+  // 1. Puxa todos os dados (BPF, 5S, fotos em base64 e cadastros)
+  const dadosBackup = {
+    sistema: "Campo Nutrição Animal - Sistema de Auditorias",
+    dataExportacao: new Date().toISOString(),
+    moduloBPF: {
+      registros: registrosAuditoria,
+      baseCriterios: baseCriterios
+    },
+    modulo5S: {
+      auditorias: auditorias5s,
+      base5s: base5s
+    }
+  };
+
+  zip.file("dados_auditoria_backup.json", JSON.stringify(dadosBackup, null, 2));
+
+  // 2. Inclui o próprio HTML do sistema
+  const htmlAtual = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  zip.file("index.html", htmlAtual);
+
+  // 3. Inclui instrução para restaurar se necessário
+  const instrucoes = `INSTRUÇÕES DE BACKUP E RESTAURAÇÃO:
+----------------------------------------
+1. Este arquivo ZIP contém todo o sistema ("index.html") e todos os dados ("dados_auditoria_backup.json") com fotos e lançamentos.
+2. Para usar o sistema em outro computador, basta extrair a pasta e abrir o arquivo "index.html" em qualquer navegador moderno.
+3. As fotos e relatórios estão integrados no arquivo JSON de dados.
+Data do Backup: ${new Date().toLocaleString("pt-BR")}`;
+  
+  zip.file("INSTRUCOES_RESTAURACAO.txt", instrucoes);
+
+  // Genera e faz o download do arquivo ZIP
+  try {
+    const content = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `BACKUP_SISTEMA_AUDITORIAS_${hojeLocal()}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert("Erro ao criar o arquivo ZIP: " + err.message);
+  }
 }
 
 /* ================= TEMA / NAVEGAÇÃO ================= */
@@ -1433,7 +1478,7 @@ function atualizarDashboard5s() {
   ];
   $("top5sSubsetores").innerHTML = colunas.map(col => {
     const top = grupos.filter(col.f).sort(col.ord).slice(0, 5);
-    const cards = top.length ? top.map(g => cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: Math.round(g.m / MAX_5S * 100), cor: col.cor, c: g.c, txt: `${fmtN(g.m)} pts` })).join("") : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
+    const cards = top.length ? top.map(g => cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: Math.round(g.m / MAX_5S * 100), cor: col.cor, c: g.c, txt: `${fmtN(g.m)} pts` })) : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
     return `<div class="min-w-0"><p class="lbl flex items-center gap-1.5"><i class="fa-solid ${col.icone}"></i>${col.rot}</p><div class="space-y-2">${cards}</div></div>`;
   }).join("");
 }
