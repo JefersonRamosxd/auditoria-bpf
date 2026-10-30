@@ -357,6 +357,7 @@
         <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Auditorias 5S</span></h3>
         <div class="flex items-center gap-3">
           <span id="counter5s" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
+          <button onclick="exibirPodio5s()" class="no-print btn btn-s !px-3 !py-1.5 text-xs border-amber-500 text-amber-600 dark:text-amber-400" title="Ver Pódio de Destaque 5S"><i class="fa-solid fa-trophy text-amber-500"></i><span>Ver Pódio</span></button>
           <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
         </div>
       </div>
@@ -400,7 +401,10 @@
       <div id="pillsStatus5s" class="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]">
         <span class="text-xs font-bold uppercase text-slate-400 mr-2 shrink-0">Status:</span>
       </div>
-      <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs shrink-0" aria-label="Imprimir / PDF"><i class="fa-solid fa-print"></i><span class="hidden sm:inline">Imprimir / PDF</span></button>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="exibirPodio5s()" class="no-print btn btn-s !px-3 !py-1.5 text-xs border-amber-500 text-amber-600 dark:text-amber-400"><i class="fa-solid fa-trophy text-amber-500"></i><span class="hidden sm:inline">Pódio Campeões</span></button>
+        <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs" aria-label="Imprimir / PDF"><i class="fa-solid fa-print"></i><span class="hidden sm:inline">Imprimir / PDF</span></button>
+      </div>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -455,6 +459,76 @@
     </div>
   </section>
 </main>
+</div>
+
+<!-- MODAL: PÓDIO DOS CAMPEÕES 5S -->
+<div id="modalPodio5s" class="modal hidden !z-[80]">
+  <div class="box max-w-xl text-center overflow-hidden">
+    <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 p-6 text-white relative">
+      <button onclick="fecharPodio5s()" class="absolute right-4 top-4 text-white/80 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+      <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+        <i class="fa-solid fa-trophy text-3xl text-yellow-300 animate-bounce"></i>
+      </div>
+      <h2 class="text-2xl font-black uppercase tracking-wide">Pódio Auditoria 5S</h2>
+      <p class="text-xs text-amber-100 mt-1 font-medium">Parabéns aos setores com melhor desempenho!</p>
+    </div>
+
+    <div class="p-6 space-y-6 bg-slate-50 dark:bg-slate-900">
+      <!-- Cartão do Campeão -->
+      <div id="cardVencedor5s" class="card bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-yellow-500/10 border-amber-500/40 p-4 rounded-xl flex items-center justify-between gap-4">
+        <div class="text-left min-w-0">
+          <span class="text-[10px] font-black tracking-widest text-amber-600 dark:text-amber-400 uppercase">🏆 Vencedor Geral</span>
+          <h3 id="vencedorNome" class="text-lg font-extrabold text-slate-900 dark:text-white truncate">-</h3>
+          <p id="vencedorResp" class="text-xs text-slate-500 dark:text-slate-400 truncate">Responsável: -</p>
+        </div>
+        <div class="text-right shrink-0">
+          <div id="vencedorPontos" class="text-2xl font-black text-amber-600 dark:text-amber-400">0 pts</div>
+          <span id="vencedorPct" class="text-xs font-bold text-emerald-500">0% aproveitamento</span>
+        </div>
+      </div>
+
+      <!-- PÓDIO DESENHADO -->
+      <div id="desenhoPodio" class="flex items-end justify-center gap-2 sm:gap-4 pt-6 pb-2 px-2">
+        <!-- 2º LUGAR -->
+        <div id="podioPos2" class="flex-1 flex flex-col items-center">
+          <div class="mb-2 text-center min-w-0 px-1">
+            <span class="w-7 h-7 rounded-full bg-slate-300 text-slate-800 font-extrabold text-xs inline-flex items-center justify-center shadow mb-1">2º</span>
+            <h4 id="p2Nome" class="text-xs font-bold truncate max-w-[100px] sm:max-w-[120px] text-slate-800 dark:text-slate-200">-</h4>
+            <span id="p2Pontos" class="text-[11px] font-extrabold text-slate-500">0 pts</span>
+          </div>
+          <div class="w-full bg-gradient-to-t from-slate-400 to-slate-300 dark:from-slate-700 dark:to-slate-600 h-28 rounded-t-xl flex items-center justify-center border-t-2 border-slate-200 dark:border-slate-500 shadow-md">
+            <i class="fa-solid fa-medal text-3xl text-slate-100 dark:text-slate-300 opacity-90"></i>
+          </div>
+        </div>
+
+        <!-- 1º LUGAR -->
+        <div id="podioPos1" class="flex-1 flex flex-col items-center">
+          <div class="mb-2 text-center min-w-0 px-1">
+            <span class="w-9 h-9 rounded-full bg-yellow-400 text-amber-950 font-black text-sm inline-flex items-center justify-center shadow-lg ring-4 ring-yellow-400/30 mb-1">1º</span>
+            <h4 id="p1Nome" class="text-sm font-extrabold truncate max-w-[110px] sm:max-w-[130px] text-slate-900 dark:text-white">-</h4>
+            <span id="p1Pontos" class="text-xs font-black text-amber-600 dark:text-amber-400">0 pts</span>
+          </div>
+          <div class="w-full bg-gradient-to-t from-amber-500 via-amber-400 to-yellow-300 h-36 rounded-t-xl flex items-center justify-center border-t-2 border-yellow-200 shadow-xl">
+            <i class="fa-solid fa-trophy text-4xl text-amber-950/80"></i>
+          </div>
+        </div>
+
+        <!-- 3º LUGAR -->
+        <div id="podioPos3" class="flex-1 flex flex-col items-center">
+          <div class="mb-2 text-center min-w-0 px-1">
+            <span class="w-7 h-7 rounded-full bg-amber-700 text-amber-100 font-extrabold text-xs inline-flex items-center justify-center shadow mb-1">3º</span>
+            <h4 id="p3Nome" class="text-xs font-bold truncate max-w-[100px] sm:max-w-[120px] text-slate-800 dark:text-slate-200">-</h4>
+            <span id="p3Pontos" class="text-[11px] font-extrabold text-amber-800 dark:text-amber-500">0 pts</span>
+          </div>
+          <div class="w-full bg-gradient-to-t from-amber-800 to-amber-700 dark:from-amber-950 dark:to-amber-900 h-20 rounded-t-xl flex items-center justify-center border-t-2 border-amber-600 shadow-md">
+            <i class="fa-solid fa-award text-2xl text-amber-200 opacity-90"></i>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="fecharPodio5s()" class="btn btn-p w-full !py-3 font-bold uppercase tracking-wider text-xs">Continuar no Sistema</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: CADASTRO COM ABA DE EXCLUSÃO -->
@@ -788,7 +862,6 @@ async function executarBackupZipCompleto() {
 
   const zip = new JSZip();
 
-  // 1. Puxa todos os dados (BPF, 5S, fotos em base64 e cadastros)
   const dadosBackup = {
     sistema: "Campo Nutrição Animal - Sistema de Auditorias",
     dataExportacao: new Date().toISOString(),
@@ -804,11 +877,9 @@ async function executarBackupZipCompleto() {
 
   zip.file("dados_auditoria_backup.json", JSON.stringify(dadosBackup, null, 2));
 
-  // 2. Inclui o próprio HTML do sistema
   const htmlAtual = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
   zip.file("index.html", htmlAtual);
 
-  // 3. Inclui instrução para restaurar se necessário
   const instrucoes = `INSTRUÇÕES DE BACKUP E RESTAURAÇÃO:
 ----------------------------------------
 1. Este arquivo ZIP contém todo o sistema ("index.html") e todos os dados ("dados_auditoria_backup.json") com fotos e lançamentos.
@@ -818,7 +889,6 @@ Data do Backup: ${new Date().toLocaleString("pt-BR")}`;
   
   zip.file("INSTRUCOES_RESTAURACAO.txt", instrucoes);
 
-  // Genera e faz o download do arquivo ZIP
   try {
     const content = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(content);
@@ -1203,7 +1273,7 @@ const CHECKLIST_5S = [
   { id: "q2", titulo: "ITEM 2. Nível de atendimento ao plano ação do mês anterior ação anterior, pontos de 1 a 3 (Avaliar através do FCA ou no próprio kanban (P/ fazer, Fazendo, Feito)", ver: "Solicitar o FCA do Setor do mês anterior e checar se as ações descritas foram atendidas ou reprogramadas, (considerar o bom senso nessa reprogramação).", params: [sn(3, "Atendimento total"), sn(1.5, "Atendimento parcial - considerar desde que tenha justificativa p/ os não atendimentos e prazo"), sn(0, "Não atendimento"), sn(-3, "Não fez o plano de ação")] },
   { id: "q3", titulo: "ITEM 3. O facilitador está executando as autoavaliações semanais? (avaliar através do preenchimento do Kanban)", ver: "Avaliar se facilitador está preenchendo o Kanban semanalmente.", params: [sn(3, "Sim"), sn(1.5, "Parcialmente"), sn(0, "Não")] },
   { id: "q4", titulo: "ITEM 4. Senso de utilização - Há apenas materiais, documentos e equipamentos necessários para a execução das atividades no local de trabalho? não tendo matérias em desuso, rasgados ou vencidos?", ver: "Verificar se no local existem apenas os objetos necessários para a execução da atividade.", params: SIM_NAO() },
-  { id: "q5", titulo: "Itens pessoais estão limitados e organizados, EPIS estão sendo utilizados?", ver: "Todos os materiais estão em uso? não tendo matérias em desuso, rasgados ou vencidos?", params: SIM_NAO() },
+  { id: "q5", titulo: "Itens pessoais estão limitados e organizedos, EPIS estão sendo utilizados?", ver: "Todos os materiais estão em uso? não tendo matérias em desuso, rasgados ou vencidos?", params: SIM_NAO() },
   { id: "q6", titulo: "ITEM 5. Senso de ordenação - Cada item tem um local definido e identificado?", ver: "Verificar se todos os objetos têm local definido para serem guardado.", params: SIM_NAO() },
   { id: "q7", titulo: "Documentos e materiais e objetos estão armazenados de forma lógica e acessível?", ver: "Levar em consideração a regra: Uso diário deve ficar ao alcance das mãos, uso eventual guardado próximo, uso eventual pode ser guardado em outro local. Se não usa não teve nem estar no setor.", params: SIM_NAO() },
   { id: "q8", titulo: "Pastas / arquivos / gavetas / armários/ caixas de armazenamento / canecas têm identificação clara (etiquetas, cores etc.)?", ver: "Verificar se tudo está devidamente identificado.", params: SIM_NAO() },
@@ -1344,7 +1414,67 @@ function salvarQuest5s() {
   aplicarRegras5s(a, manual);
   antigo ? auditorias5s.splice(auditorias5s.indexOf(antigo), 1, a) : auditorias5s.unshift(a);
   salvarDados5s(); fecharQuest5s(); renderizar5sLanc(); atualizarDashboard5s();
-  alert(`Auditoria salva! Pontuação: ${fmtN(a.total)} / ${MAX_5S} (${a.statusConf}).`);
+  
+  // Abre o Pop-up de Pódio dos 3 Melhores assim que finaliza
+  exibirPodio5s();
+}
+
+/* ================= LÓGICA DO PÓDIO DOS 3 MELHORES 5S ================= */
+function calcularPodio5s() {
+  const mapa = {};
+  auditorias5s.forEach(a => {
+    const k = a.setor + " - " + a.subsetor;
+    if (!mapa[k]) mapa[k] = { nome: k, setor: a.setor, subsetor: a.subsetor, notas: [] };
+    mapa[k].notas.push(a.total);
+  });
+  
+  const ranking = Object.values(mapa).map(item => {
+    const mediaPts = media(item.notas);
+    return {
+      nome: item.nome,
+      setor: item.setor,
+      subsetor: item.subsetor,
+      responsavel: responsaveisSetor[item.setor] || "Não especificado",
+      mediaPts: arred(mediaPts),
+      pct: Math.round((mediaPts / MAX_5S) * 100)
+    };
+  }).sort((a, b) => b.mediaPts - a.mediaPts);
+
+  return ranking;
+}
+
+function exibirPodio5s() {
+  const ranking = calcularPodio5s();
+  if (!ranking.length) {
+    alert("Nenhuma auditoria 5S cadastrada para formar o pódio.");
+    return;
+  }
+
+  const p1 = ranking[0] || { nome: "N/A", mediaPts: 0, pct: 0, responsavel: "-" };
+  const p2 = ranking[1] || { nome: "N/A", mediaPts: 0, pct: 0 };
+  const p3 = ranking[2] || { nome: "N/A", mediaPts: 0, pct: 0 };
+
+  // Atualiza dados do 1º Lugar (Campeão)
+  $("vencedorNome").textContent = p1.nome;
+  $("vencedorResp").textContent = "Responsável: " + p1.responsavel;
+  $("vencedorPontos").textContent = `${fmtN(p1.mediaPts)} pts`;
+  $("vencedorPct").textContent = `${p1.pct}% aproveitamento`;
+
+  // Preenche as posições do pódio visual
+  $("p1Nome").textContent = p1.nome;
+  $("p1Pontos").textContent = `${fmtN(p1.mediaPts)} pts`;
+
+  $("p2Nome").textContent = p2.nome;
+  $("p2Pontos").textContent = p2.nome !== "N/A" ? `${fmtN(p2.mediaPts)} pts` : "-";
+
+  $("p3Nome").textContent = p3.nome;
+  $("p3Pontos").textContent = p3.nome !== "N/A" ? `${fmtN(p3.mediaPts)} pts` : "-";
+
+  $("modalPodio5s").classList.remove("hidden");
+}
+
+function fecharPodio5s() {
+  $("modalPodio5s").classList.add("hidden");
 }
 
 function visualizarQuest5s() { abrirPreview5s(quest5s.aud); }
