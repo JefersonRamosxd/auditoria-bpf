@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Auditoria BPF - Campo Nutrição Animal</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config = { darkMode: 'class' }</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+
+<style type="text/tailwindcss">
+  @layer components {
+    .card  { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md; }
+    .inp   { @apply w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#166534] outline-none min-h-[42px]; }
+    .inp[readonly] { @apply bg-slate-100 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 cursor-not-allowed; }
+    .lbl   { @apply block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1; }
+    .btn   { @apply px-4 py-2.5 rounded-lg text-sm font-semibold transition inline-flex items-center justify-center gap-2 min-h-[42px] cursor-pointer; }
+    .btn-p { @apply bg-[#166534] hover:bg-[#15803d] text-white shadow; }
+    .btn-s { @apply bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700; }
+    .btn-g { @apply text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800; }
+    .modal { @apply fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto; }
+    .box   { @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full shadow-2xl overflow-hidden my-auto; }
+    .box-h { @apply bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 font-bold text-base; }
+    .pill    { @apply px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap min-h-[36px] flex items-center; }
+    .pill-off { @apply bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700; }
+    .pill-on  { @apply bg-[#166534] text-white shadow-sm; }
+    .nav-on   { @apply bg-[#166534] text-white shadow ring-2 ring-emerald-400/50; }
+    .nav-off  { @apply bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700; }
+    .badge { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold; }
+    .kpi   { @apply card p-5 flex items-center justify-between; }
+    .kpi-t { @apply text-xs font-semibold uppercase text-slate-400; }
+    .kpi-v { @apply text-3xl font-extrabold mt-1; }
+    .kpi-i { @apply p-3 rounded-xl border text-xl; }
+    .th    { @apply p-3.5; }
+  }
+</style>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .badge-conforme { background: rgba(22,101,52,.12); color: #166534; border: 1px solid rgba(22,101,52,.25); }
+  .dark .badge-conforme { background: rgba(74,222,128,.15); color: #4ade80; border-color: rgba(74,222,128,.3); }
+  .badge-nao-conforme { background: rgba(197,34,31,.12); color: #c5221f; border: 1px solid rgba(197,34,31,.25); }
+  .dark .badge-nao-conforme { background: rgba(248,113,113,.15); color: #f87171; border-color: rgba(248,113,113,.3); }
+  .badge-andamento { background: rgba(217,119,6,.12); color: #b45309; border: 1px solid rgba(217,119,6,.25); }
+  .dark .badge-andamento { background: rgba(251,191,36,.15); color: #fbbf24; border-color: rgba(251,191,36,.3); }
+  .row-vencido   { background: rgba(239,68,68,.08) !important; box-shadow: inset 4px 0 0 #ef4444; }
+  .row-andamento { background: rgba(245,158,11,.10) !important; box-shadow: inset 4px 0 0 #f59e0b; }
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .print-area { box-shadow: none !important; border: none !important; }
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+<!-- TELA DE LOGIN / SEGURANÇA NA WEB -->
+<div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+  <div class="card max-w-sm w-full p-6 space-y-6 text-center shadow-2xl bg-white dark:bg-slate-900">
+    <div class="w-full flex justify-center py-2">
+      <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="max-h-16 w-auto object-contain">
+    </div>
+    <div>
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Auditoria BPF</h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Acesso Restrito</p>
+    </div>
+    <form onsubmit="realizarLogin(event)" class="space-y-4 text-left">
+      <div>
+        <label class="lbl">Usuário</label>
+        <div class="relative">
+          <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+          <input type="text" id="inputUsuario" placeholder="Digite seu usuário..." class="inp !pl-10" required autofocus>
+        </div>
+      </div>
+      <div>
+        <label class="lbl">Senha de Acesso</label>
+        <div class="relative">
+          <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+          <input type="password" id="inputSenha" placeholder="Digite sua senha..." class="inp !pl-10" required>
+        </div>
+        <p id="erroLogin" class="hidden text-[11px] text-rose-500 font-semibold mt-1.5">Usuário ou senha incorretos. Tente novamente.</p>
+      </div>
+      <button type="submit" class="btn btn-p w-full">Entrar no Sistema</button>
+    </form>
+  </div>
+</div>
+
+<!-- APLICAÇÃO PRINCIPAL -->
+<div id="appPrincipal" class="hidden flex-col min-h-screen">
+  <!-- HEADER -->
+  <header class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 min-h-20 flex flex-wrap items-center justify-between gap-3">
+      <div class="relative">
+        <button onclick="toggleMenuModulos(event)" class="btn btn-s !px-3.5 text-xs uppercase tracking-wider">
+          <i class="fa-solid fa-bars text-[#166534]"></i><span>Módulos / Auditorias</span><i class="fa-solid fa-chevron-down text-[10px]"></i>
+        </button>
+        <div id="menuModulos" class="hidden absolute left-0 top-full pt-1 w-64 z-50">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2">
+            <a href="#" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
+            <a href="#" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
+            <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-triangle-exclamation text-slate-400"></i><span>NÃO CONFORMIDADES</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="h-9 flex items-center">
+          <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="h-8 w-auto object-contain">
+        </div>
+        <h1 class="font-extrabold text-sm sm:text-base tracking-wide border-l border-slate-300 dark:border-slate-700 pl-3">Auditoria BPF</h1>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs"><i class="fa-solid fa-list-check"></i> Lançamentos</button>
+        <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs"><i class="fa-solid fa-chart-pie"></i> Dashboard BPF</button>
+        <button onclick="alternarModoEscuro()" class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- TELA 1: LANÇAMENTOS -->
+    <section id="telaLancamentos" class="space-y-6">
+      <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold">Lançamentos de Campo</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filtre por setor, data ou código/critério, ou inicie uma nova inspeção.</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <button onclick="abrirModalNovaAuditoria()" class="btn btn-p"><i class="fa-solid fa-plus"></i><span>Iniciar Nova Auditoria</span></button>
+          <button onclick="abrirModalCadastro()" class="btn btn-s"><i class="fa-solid fa-folder-plus"></i><span>Cadastro</span></button>
+        </div>
+      </div>
+
+      <div class="no-print card p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+          <label class="lbl">Setor Auditado</label>
+          <select id="filtroLancSetor" onchange="renderizarTabelaLancamentos()" class="inp">
+            <option value="TODOS">Todos os Setores</option>
+            <option value="ÁREA DE APOIO">Área de Apoio</option>
+            <option value="EXPEDIÇÃO">Expedição</option>
+            <option value="MANUTENÇÃO">Manutenção</option>
+            <option value="PRODUÇÃO">Produção</option>
+            <option value="SUPRIMENTOS">Suprimentos</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Data da Auditoria</label>
+          <input type="date" id="filtroLancData" onchange="renderizarTabelaLancamentos()" class="inp">
+        </div>
+        <div>
+          <label class="lbl">Pesquisar por Código / Critério</label>
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+            <input type="text" id="filtroLancCodigo" oninput="renderizarTabelaLancamentos()" placeholder="Ex: 2.0, 25.1, teto..." class="inp !pl-10">
+          </div>
+        </div>
+        <button onclick="limparFiltrosLanc()" class="btn btn-s"><i class="fa-solid fa-eraser"></i><span>Limpar filtros</span></button>
+      </div>
+
+      <div class="card overflow-hidden print-area">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950/50">
+          <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Requisitos para Auditoria</span></h3>
+          <div class="flex items-center gap-3">
+            <span id="counterLancamentos" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
+            <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                <th class="th">Código / Data</th><th class="th">Setor &amp; Subsetor</th><th class="th">Critério BPF Auditado</th>
+                <th class="th text-center">Status</th><th class="th text-center">Avaliação BPF</th><th class="th">Prazo / Vencimento</th>
+                <th class="th text-center no-print">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyLancamentos" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 2: DASHBOARD -->
+    <section id="telaDashboard" class="space-y-6 hidden">
+      <div class="card p-5 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="lbl">Setor Auditado</label>
+            <select id="dashFilterSetor" onchange="atualizarDashboard()" class="inp">
+              <option value="TODOS">Todos os Setores</option>
+              <option value="ÁREA DE APOIO">Área de Apoio</option>
+              <option value="EXPEDIÇÃO">Expedição</option>
+              <option value="MANUTENÇÃO">Manutenção</option>
+              <option value="PRODUÇÃO">Produção</option>
+              <option value="SUPRIMENTOS">Suprimentos</option>
+            </select>
+          </div>
+          <div><label class="lbl">Data Inicial</label><input type="date" id="dashFilterDataIni" onchange="atualizarDashboard()" class="inp"></div>
+          <div><label class="lbl">Data Final</label><input type="date" id="dashFilterDataFim" onchange="atualizarDashboard()" class="inp"></div>
+          <div><label class="lbl">Pesquisar</label><input type="text" id="dashFilterQuery" oninput="atualizarDashboard()" placeholder="Requisito, responsável..." class="inp"></div>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2">
+          <div id="pillsStatus" class="flex items-center gap-2 overflow-x-auto pb-1">
+            <span class="text-xs font-bold uppercase text-slate-400 mr-2">Status:</span>
+          </div>
+          <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="kpi"><div><span class="kpi-t">Total de Itens</span><div id="kpiTotal" class="kpi-v">0</div><span class="text-[11px] text-slate-500">Auditados no período</span></div>
+          <div class="kpi-i bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"><i class="fa-solid fa-list-ol"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Índice BPF</span><div id="kpiIndice" class="kpi-v text-emerald-600 dark:text-emerald-400">0%</div><span id="kpiIndiceClass" class="text-[11px] font-bold text-emerald-500">-</span></div>
+          <div class="kpi-i bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"><i class="fa-solid fa-chart-line"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Não Conformidades</span><div id="kpiNC" class="kpi-v text-rose-600 dark:text-rose-400">0</div><span id="kpiNCSub" class="text-[11px] text-rose-500 font-medium">0% do total exibido</span></div>
+          <div class="kpi-i bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
+        <div class="kpi"><div><span class="kpi-t">Planos em Aberto</span><div id="kpiPlanos" class="kpi-v text-amber-600 dark:text-amber-400">0</div><span class="text-[11px] text-slate-500">Requerem acompanhamento</span></div>
+          <div class="kpi-i bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50"><i class="fa-solid fa-clock-rotate-left"></i></div></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-5">
+          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-[#166534]"></i><span>Distribuição Geral BPF</span></h3>
+          <div class="relative h-56"><canvas id="chartDonut"></canvas></div>
+        </div>
+        <div class="card p-5 lg:col-span-2">
+          <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-simple text-[#166534]"></i><span>Conformidade &amp; Status por Setor (%)</span></h3>
+          <div class="relative h-56"><canvas id="chartBarras"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div>
+            <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#166534]"></i><span>Variação da Taxa de Conformidade BPF (%)</span></h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Índice de conformidade por mês auditado (respeita os filtros de setor, data e pesquisa).</p>
+          </div>
+          <div id="boxVariacaoMes" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs Mês Anterior:</span>
+            <span id="txtVariacaoPct" class="text-sm font-extrabold">-</span>
+          </div>
+        </div>
+        <div class="relative h-64"><canvas id="chartEvolucaoLinha"></canvas></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL: CADASTRO -->
+<div id="modalCadastro" class="modal hidden">
+  <div class="box max-w-lg">
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-folder-plus text-[#166534]"></i>Cadastrar Novo Item / Critério BPF</span>
+      <button onclick="fecharModalCadastro()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <form id="formCadastroItem" onsubmit="salvarNovoCadastroItem(event)" class="p-6 space-y-4">
+      <div><label class="lbl">Setor / Aba</label>
+        <select id="cadSetor" class="inp" required>
+          <option value="">Selecione o setor...</option>
+          <option value="ÁREA DE APOIO">Área de Apoio</option><option value="EXPEDIÇÃO">Expedição</option>
+          <option value="MANUTENÇÃO">Manutenção</option><option value="PRODUÇÃO">Produção</option><option value="SUPRIMENTOS">Suprimentos</option>
+        </select></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="lbl">Subsetor</label><input type="text" id="cadSubsetor" placeholder="Ex: Resíduos, Estoque..." class="inp" required></div>
+        <div><label class="lbl">Item / Código</label><input type="text" id="cadCodigo" placeholder="Ex: 2.2, 25.3" class="inp" required></div>
+      </div>
+      <div><label class="lbl">Critério</label><textarea id="cadCriterio" rows="2" placeholder="Descrição detalhada do critério BPF..." class="inp" required></textarea></div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" onclick="fecharModalCadastro()" class="btn btn-g">Cancelar</button>
+        <button type="submit" class="btn btn-p">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: PRAZO -->
+<div id="modalPrazo" class="modal hidden">
+  <div class="box max-w-sm p-6 space-y-4">
+    <div class="flex items-center gap-3 text-amber-600 dark:text-amber-400"><i class="fa-solid fa-hourglass-start text-2xl"></i>
+      <h3 class="font-bold text-base text-slate-900 dark:text-white">Definir Prazo da Pendência</h3></div>
+    <p class="text-xs text-slate-500 dark:text-slate-400">Informe o prazo em dias para resolução desta pendência BPF:</p>
+    <input type="number" id="inputDiasPrazo" min="0" value="5" class="inp font-bold text-center !text-lg">
+    <div class="flex justify-end gap-2 pt-2">
+      <button onclick="cancelarPrazoPendente()" class="btn btn-g">Cancelar</button>
+      <button onclick="confirmarPrazoPendente()" class="btn btn-p">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIÇÃO RÁPIDA -->
+<div id="modalEdicao" class="modal hidden">
+  <div class="box max-w-sm p-6 space-y-4">
+    <div class="flex items-center gap-3 text-[#166534]"><i class="fa-solid fa-pen-to-square text-xl"></i>
+      <h3 class="font-bold text-base text-slate-900 dark:text-white">Editar Registro</h3></div>
+    <input type="hidden" id="editIdRegistro">
+    <div><label class="lbl">Avaliação BPF</label>
+      <select id="editStatusConf" class="inp">
+        <option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option><option value="NC c/ Ação Programada">NC c/ Ação Programada</option>
+      </select></div>
+    <div><label class="lbl">Prazo (Dias)</label><input type="number" id="editPrazo" min="0" class="inp font-bold"></div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+      <button onclick="fecharModalEdicao()" class="btn btn-g">Cancelar</button>
+      <button onclick="salvarEdicaoRapida()" class="btn btn-p">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FOTO -->
+<div id="modalFoto" class="modal hidden" onclick="this.classList.add('hidden')">
+  <img id="imgFoto" alt="Foto de evidência" class="max-h-[85vh] max-w-full rounded-xl shadow-2xl">
+</div>
+
+<!-- MODAL: NOVA AUDITORIA -->
+<div id="modalAuditoria" class="modal hidden">
+  <div class="box max-w-lg">
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-[#166534]"></i>Registrar Nova Inspeção BPF</span>
+      <button onclick="fecharModalAuditoria()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <form id="formNovaAuditoria" onsubmit="salvarNovaAuditoria(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+      <input type="hidden" id="newSubsetor">
+      <div><label class="lbl">Setor Auditado</label>
+        <select id="newSetor" onchange="atualizarResponsavelSetor()" class="inp" required>
+          <option value="">Selecione o setor...</option>
+          <option value="ÁREA DE APOIO">Área de Apoio</option><option value="EXPEDIÇÃO">Expedição</option>
+          <option value="MANUTENÇÃO">Manutenção</option><option value="PRODUÇÃO">Produção</option><option value="SUPRIMENTOS">Suprimentos</option>
+        </select></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="lbl">Data da Auditoria</label><input type="date" id="newData" class="inp" required></div>
+        <div><label class="lbl">Item</label><input type="text" id="newCodigo" oninput="autopreencherDados()" placeholder="Ex: 2.0, 25.1" class="inp" required></div>
+      </div>
+      <div><label class="lbl">Critério de Auditoria</label>
+        <textarea id="newCriterio" rows="2" placeholder="Preenchimento automático pelo item..." class="inp" readonly></textarea>
+        <p id="avisoCodigo" class="hidden text-[11px] text-rose-500 mt-1">Código não encontrado. Cadastre-o em "Cadastro" primeiro.</p></div>
+      <div><label class="lbl">Avaliação BPF</label>
+        <select id="newStatusConf" class="inp" required>
+          <option value="">Selecionar</option><option value="Conforme">Conforme</option>
+          <option value="Não Conforme">Não Conforme</option><option value="NC c/ Ação Programada">NC c/ Ação Programada</option>
+        </select></div>
+      <div><label class="lbl">Responsável pelo Setor</label><input type="text" id="newResponsavel" placeholder="Vinculado ao setor..." class="inp" readonly></div>
+      <div><label class="lbl">Observações</label><textarea id="newObservacoes" rows="2" placeholder="Notas ou observações adicionais..." class="inp"></textarea></div>
+      <div><label class="lbl">Adicionar Foto de Evidência</label>
+        <label class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#166534] bg-slate-50 dark:bg-slate-950 rounded-lg p-3.5 flex items-center justify-center gap-2 cursor-pointer transition text-slate-600 dark:text-slate-300">
+          <i class="fa-solid fa-camera text-emerald-600 text-lg"></i><span id="labelFoto" class="text-xs font-medium">Clique para tirar foto ou anexar...</span>
+          <input type="file" id="newFoto" accept="image/*" capture="environment" class="hidden" onchange="atualizarNomeFoto(this)">
+        </label></div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" onclick="fecharModalAuditoria()" class="btn btn-g">Cancelar</button>
+        <button type="submit" class="btn btn-p">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ================= LOGIN ================= */
+function realizarLogin(e) {
+  e.preventDefault();
+  const usuario = document.getElementById("inputUsuario").value.trim();
+  const senha = document.getElementById("inputSenha").value;
+  if (usuario === "ANDRESSACASS" && senha === "Srhokage@11") {
+    document.getElementById("telaLogin").classList.add("hidden");
+    document.getElementById("appPrincipal").classList.remove("hidden");
+    document.getElementById("appPrincipal").classList.add("flex");
+  } else {
+    document.getElementById("erroLogin").classList.remove("hidden");
+    document.getElementById("inputSenha").value = "";
+    document.getElementById("inputSenha").focus();
+  }
+}
+
+/* ================= DADOS ================= */
+const STORAGE_KEY = "bpf_auditoria_v2";
+
+const responsaveisSetor = {
+  "ÁREA DE APOIO": "Fernanda Turella",
+  "EXPEDIÇÃO": "Eline",
+  "MANUTENÇÃO": "Marivon",
+  "PRODUÇÃO": "João Vinicius",
+  "SUPRIMENTOS": "Sebastião / Leandro"
+};
+const SETORES = Object.keys(responsaveisSetor);
+
+const baseSeed = [
+  { setor: "ÁREA DE APOIO", subsetor: "RESIDUOS RECICLAVEIS", codigo: "2.0", criterio: "Teto em bom estado de conservação" },
+  { setor: "ÁREA DE APOIO", subsetor: "RESIDUOS RECICLAVEIS", codigo: "2.1", criterio: "Paredes de acabamento que permita a adequada limpeza" },
+  { setor: "EXPEDIÇÃO", subsetor: "ESTOQUE PA", codigo: "25.0", criterio: "Teto em bom estado de conservação" },
+  { setor: "EXPEDIÇÃO", subsetor: "ESTOQUE PA", codigo: "25.1", criterio: "Prateleiras em bom estado de conservação" },
+  { setor: "MANUTENÇÃO", subsetor: "MANUTENÇÃO", codigo: "8.1", criterio: "Torneiras de fechamento não manual em bom estado" },
+  { setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "12.0", criterio: "Uso completo e correto de EPIs e vestimentas limpas" },
+  { setor: "SUPRIMENTOS", subsetor: "AREA DE PALETES", codigo: "1.0", criterio: "Teto em bom estado de conservação" }
+];
+
+const registrosSeed = [
+  { id: "BPF-101", data: "2026-05-15", setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "12.0", criterio: "Uso de EPIs", statusExec: "Concluído", statusConf: "Conforme", responsavel: "João Vinicius", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-102", data: "2026-06-10", setor: "ÁREA DE APOIO", subsetor: "RESIDUOS", codigo: "2.1", criterio: "Sanitização", statusExec: "Pendente", statusConf: "Não Conforme", responsavel: "Fernanda Turella", prazoDias: 5, vencimento: "2026-06-15", acao: "Sanitizar", observacoes: "" },
+  { id: "BPF-103", data: "2026-07-20", setor: "MANUTENÇÃO", subsetor: "MANUTENÇÃO", codigo: "8.1", criterio: "Calibração", statusExec: "Concluído", statusConf: "Conforme", responsavel: "Marivon", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-104", data: "2026-08-12", setor: "SUPRIMENTOS", subsetor: "PALETES", codigo: "1.0", criterio: "Pallets", statusExec: "Concluído", statusConf: "Conforme", responsavel: "Sebastião", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-105", data: "2026-09-05", setor: "EXPEDIÇÃO", subsetor: "ESTOQUE", codigo: "25.1", criterio: "Prateleiras", statusExec: "Concluído", statusConf: "Conforme", responsavel: "Eline", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-106", data: "2026-10-01", setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "12.0", criterio: "Uso completo e correto de EPIs e vestimentas limpas pelos operadores", statusExec: "Concluído", statusConf: "Conforme", responsavel: "João Vinicius", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-107", data: "2026-10-03", setor: "ÁREA DE APOIO", subsetor: "RESIDUOS RECICLAVEIS", codigo: "2.1", criterio: "Validação da limpeza e sanitização do sistema CIP na linha de sucos", statusExec: "Pendente", statusConf: "Não Conforme", responsavel: "Fernanda Turella", prazoDias: 5, vencimento: "2026-10-08", acao: "Refazer ciclo de sanitização alcalina e re-testar swab de superfície", observacoes: "Swab deu positivo em contagem." },
+  { id: "BPF-108", data: "2026-10-05", setor: "MANUTENÇÃO", subsetor: "MANUTENÇÃO", codigo: "8.1", criterio: "Aferição e calibração periódica dos termômetros de controle do pasteurizador", statusExec: "Concluído", statusConf: "Conforme", responsavel: "Marivon", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
+  { id: "BPF-109", data: "2026-10-08", setor: "SUPRIMENTOS", subsetor: "ÁREA DE PALETES", codigo: "1.0", criterio: "Integridade dos estrados e distanciamento de pallets em relação às paredes", statusExec: "Em Andamento", statusConf: "NC c/ Ação Programada", responsavel: "Sebastião / Leandro", prazoDias: 10, vencimento: "2026-10-18", acao: "Afastar estantes do setor B2 a 50cm da parede", observacoes: "" }
+];
+
+let baseCriterios = structuredClone(baseSeed);
+let registrosAuditoria = structuredClone(registrosSeed);
+let filtroStatusAtual = "TODOS";
+let pendenciaTempData = null;
+let chartDonutObj = null, chartBarrasObj = null, chartEvolucaoObj = null;
+
+/* ================= UTILITÁRIOS ================= */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+
+function hojeLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function somarDias(dataStr, dias) {
+  const [a, m, d] = dataStr.split("-").map(Number);
+  const dt = new Date(a, m - 1, d + dias);
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+}
+function formatarData(s) {
+  if (!s) return "-";
+  const p = s.split("-");
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
+}
+function proximoId() {
+  const max = registrosAuditoria.reduce((m, r) => Math.max(m, parseInt(String(r.id).split("-")[1]) || 0), 100);
+  return `BPF-${max + 1}`;
+}
+function lerPrazo(valor, padrao) {
+  const n = parseInt(valor, 10);
+  return Number.isNaN(n) || n < 0 ? padrao : n;
+}
+const getNomeMesAbrev = m => ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][m - 1] || "";
+
+/* ================= PERSISTÊNCIA ================= */
+function salvarDados() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ registros: registrosAuditoria, base: baseCriterios }));
+  } catch (e) {
+    alert("Não foi possível salvar no navegador (armazenamento cheio ou bloqueado).");
+  }
+}
+function carregarDados() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.registros)) registrosAuditoria = d.registros;
+    if (Array.isArray(d.base)) baseCriterios = d.base;
+  } catch (e) { console.warn("Falha ao carregar dados salvos:", e); }
+}
+
+/* ================= TEMA / NAVEGAÇÃO ================= */
+function aplicarTemaGraficos() {
+  const dark = document.documentElement.classList.contains("dark");
+  Chart.defaults.color = dark ? "#94a3b8" : "#475569";
+  Chart.defaults.borderColor = dark ? "#1e293b" : "#e2e8f0";
+  if (chartDonutObj) chartDonutObj.data.datasets[0].borderColor = dark ? "#0f172a" : "#ffffff";
+  [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update());
+}
+function alternarModoEscuro() {
+  const html = document.documentElement;
+  html.classList.toggle("dark");
+  $("iconeTema").className = html.classList.contains("dark") ? "fa-solid fa-sun text-sm" : "fa-solid fa-moon text-sm";
+  aplicarTemaGraficos();
+}
+let eraDark = false;
+window.addEventListener("beforeprint", () => { eraDark = document.documentElement.classList.contains("dark"); document.documentElement.classList.remove("dark"); aplicarTemaGraficos(); });
+window.addEventListener("afterprint", () => { if (eraDark) document.documentElement.classList.add("dark"); aplicarTemaGraficos(); });
+
+function toggleMenuModulos(e) { e.stopPropagation(); $("menuModulos").classList.toggle("hidden"); }
+document.addEventListener("click", () => $("menuModulos").classList.add("hidden"));
+
+function selecionarModulo(mod) {
+  $("menuModulos").classList.add("hidden");
+  if (mod === "bpf") mudarTela("lancamentos");
+  else alert("O módulo selecionado está em desenvolvimento e estará disponível em breve.");
+}
+
+function mudarTela(tela) {
+  const lanc = tela === "lancamentos";
+  $("telaLancamentos").classList.toggle("hidden", !lanc);
+  $("telaDashboard").classList.toggle("hidden", lanc);
+  const base = "btn !px-3 !py-1.5 text-xs ";
+  $("btnNavLancamentos").className = base + (lanc ? "nav-on" : "nav-off");
+  $("btnNavDashboard").className = base + (lanc ? "nav-off" : "nav-on");
+  if (!lanc) atualizarDashboard();
+}
+
+/* ================= LANÇAMENTOS ================= */
+function limparFiltrosLanc() {
+  $("filtroLancSetor").value = "TODOS";
+  $("filtroLancData").value = "";
+  $("filtroLancCodigo").value = "";
+  renderizarTabelaLancamentos();
+}
+
+function renderizarTabelaLancamentos() {
+  const setorSel = $("filtroLancSetor").value;
+  const dataSel = $("filtroLancData").value;
+  const q = $("filtroLancCodigo").value.toLowerCase().trim();
+  const hoje = hojeLocal();
+
+  const filtrados = registrosAuditoria.filter(i =>
+    (setorSel === "TODOS" || i.setor === setorSel) &&
+    (!dataSel || i.data === dataSel) &&
+    (!q || i.codigo.toLowerCase().includes(q) || i.criterio.toLowerCase().includes(q))
+  );
+
+  $("counterLancamentos").innerText = `Exibindo ${filtrados.length} de ${registrosAuditoria.length} registros`;
+
+  if (!filtrados.length) {
+    $("tbodyLancamentos").innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`;
+    return;
+  }
+
+  $("tbodyLancamentos").innerHTML = filtrados.map(i => {
+    const aberto = i.statusExec === "Pendente" || i.statusExec === "Em Andamento";
+    const vencido = aberto && i.vencimento && i.vencimento < hoje;
+    const andamento = i.statusConf === "NC c/ Ação Programada" || i.statusExec === "Em Andamento";
+    const rowClass = vencido ? "row-vencido" : andamento ? "row-andamento" : "hover:bg-slate-50 dark:hover:bg-slate-900/50 transition";
+    const id = esc(i.id);
+    return `
+      <tr class="${rowClass}">
+        <td class="p-3.5"><div class="font-bold">${esc(i.codigo)}</div><div class="text-[11px] text-slate-400">${formatarData(i.data)}</div></td>
+        <td class="p-3.5"><div class="font-semibold text-slate-700 dark:text-slate-300">${esc(i.setor)}</div><div class="text-[11px] text-slate-400">${esc(i.subsetor)}</div></td>
+        <td class="p-3.5 max-w-xs">
+          <p class="text-xs font-medium leading-relaxed">${esc(i.criterio)}</p>
+          ${i.observacoes ? `<p class="text-[11px] text-slate-400 mt-1 italic">Obs: ${esc(i.observacoes)}</p>` : ""}
+        </td>
+        <td class="p-3.5 text-center">${getStatusBadgeHTML(i.statusExec)}</td>
+        <td class="p-3.5 text-center">${getBadgeHTML(i.statusConf)}</td>
+        <td class="p-3.5 text-xs">
+          ${i.statusExec !== "Concluído" ? `
+            <div class="font-bold ${vencido ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}">${i.prazoDias ?? 0} dias</div>
+            <div class="text-[10px] ${vencido ? "text-rose-500 font-semibold" : "text-slate-400"}">${vencido ? "VENCIDO (" + formatarData(i.vencimento) + ")" : "Vence: " + formatarData(i.vencimento)}</div>
+          ` : '<span class="text-slate-400">-</span>'}
+        </td>
+        <td class="p-3.5 text-center no-print whitespace-nowrap">
+          ${i.foto ? `<button onclick="verFoto('${id}')" title="Ver foto" class="p-2 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-image"></i></button>` : ""}
+          <button onclick="abrirEdicaoRapida('${id}')" title="Editar" class="p-2 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
+          <button onclick="excluirRegistro('${id}')" title="Excluir" class="p-2 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+        </td>
+      </tr>`;
+  }).join("");
+}
+
+function verFoto(id) {
+  const r = registrosAuditoria.find(x => x.id === id);
+  if (!r || !r.foto) return;
+  $("imgFoto").src = r.foto;
+  $("modalFoto").classList.remove("hidden");
+}
+
+function abrirEdicaoRapida(id) {
+  const i = registrosAuditoria.find(r => r.id === id);
+  if (!i) return;
+  $("editIdRegistro").value = i.id;
+  $("editStatusConf").value = i.statusConf || "Conforme";
+  $("editPrazo").value = i.prazoDias ?? 5;
+  $("modalEdicao").classList.remove("hidden");
+}
+function fecharModalEdicao() { $("modalEdicao").classList.add("hidden"); }
+
+function salvarEdicaoRapida() {
+  const item = registrosAuditoria.find(r => r.id === $("editIdRegistro").value);
+  if (item) {
+    const statusConf = $("editStatusConf").value;
+    const prazo = lerPrazo($("editPrazo").value, 5);
+    item.statusConf = statusConf;
+    if (statusConf === "Conforme") {
+      item.statusExec = "Concluído"; item.prazoDias = 0; item.vencimento = "";
+    } else {
+      item.statusExec = statusConf === "Não Conforme" ? "Pendente" : "Em Andamento";
+      item.prazoDias = prazo;
+      item.vencimento = somarDias(item.data, prazo);
+    }
+    salvarDados();
+  }
+  fecharModalEdicao();
+  renderizarTabelaLancamentos();
+  atualizarDashboard();
+}
+
+function excluirRegistro(id) {
+  if (!confirm("Deseja realmente excluir este registro?")) return;
+  registrosAuditoria = registrosAuditoria.filter(r => r.id !== id);
+  salvarDados();
+  renderizarTabelaLancamentos();
+  atualizarDashboard();
+}
+
+function abrirModalNovaAuditoria() {
+  $("newData").value = hojeLocal();
+  $("modalAuditoria").classList.remove("hidden");
+}
+function fecharModalAuditoria() {
+  $("modalAuditoria").classList.add("hidden");
+  $("formNovaAuditoria").reset();
+  $("newSubsetor").value = "";
+  $("avisoCodigo").classList.add("hidden");
+  $("labelFoto").innerText = "Clique para tirar foto ou anexar...";
+}
+
+function autopreencherDados() {
+  const cod = $("newCodigo").value.trim();
+  const achado = cod && baseCriterios.find(c => c.codigo === cod);
+  if (achado) {
+    $("newSetor").value = achado.setor;
+    $("newSubsetor").value = achado.subsetor;
+    $("newCriterio").value = achado.criterio;
+    $("newResponsavel").value = responsaveisSetor[achado.setor] || "Responsável Setorial";
+    $("avisoCodigo").classList.add("hidden");
+  } else {
+    $("newSubsetor").value = "";
+    $("newCriterio").value = "";
+    $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
+    $("avisoCodigo").classList.toggle("hidden", !cod);
+  }
+}
+function atualizarResponsavelSetor() {
+  $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
+}
+function atualizarNomeFoto(input) {
+  $("labelFoto").innerText = input.files && input.files[0] ? input.files[0].name : "Clique para tirar foto ou anexar...";
+}
+
+function lerFoto(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = reject;
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const fator = Math.min(1, 800 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * fator);
+        c.height = Math.round(img.height * fator);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+async function salvarNovaAuditoria(e) {
+  e.preventDefault();
+  const setor = $("newSetor").value;
+  const data = $("newData").value;
+  const criterio = $("newCriterio").value;
+  const statusConf = $("newStatusConf").value;
+  const responsavel = $("newResponsavel").value;
+  const observacoes = $("newObservacoes").value.trim();
+  const subsetor = $("newSubsetor").value || "Geral";
+
+  if (!criterio) { alert("Código não encontrado: o critério está vazio. Use um código cadastrado."); return; }
+  if (!setor || !responsavel) { alert("Selecione o setor."); return; }
+
+  let foto = "";
+  const arq = $("newFoto").files[0];
+  if (arq) {
+    try { foto = await lerFoto(arq); }
+    catch { alert("Não foi possível ler a foto. O registro será salvo sem ela."); }
+  }
+
+  let statusExec = "Concluído", prazoDias = 0;
+  if (statusConf === "Não Conforme") { statusExec = "Pendente"; prazoDias = 5; }
+  else if (statusConf === "NC c/ Ação Programada") { statusExec = "Em Andamento"; prazoDias = 10; }
+
+  const reg = { data, setor, subsetor, codigo: $("newCodigo").value.trim(), criterio, statusExec, statusConf, responsavel, prazoDias, vencimento: "", acao: "-", observacoes, foto };
+
+  if (statusConf === "Conforme") {
+    registrosAuditoria.unshift({ id: proximoId(), ...reg });
+    salvarDados();
+    fecharModalAuditoria();
+    renderizarTabelaLancamentos();
+    atualizarDashboard();
+  } else {
+    pendenciaTempData = reg;
+    $("inputDiasPrazo").value = prazoDias;
+    fecharModalAuditoria();
+    $("modalPrazo").classList.remove("hidden");
+  }
+}
+
+function confirmarPrazoPendente() {
+  if (pendenciaTempData) {
+    const dias = lerPrazo($("inputDiasPrazo").value, 5);
+    pendenciaTempData.prazoDias = dias;
+    pendenciaTempData.vencimento = somarDias(pendenciaTempData.data, dias);
+    pendenciaTempData.acao = "Ação corretiva em andamento / definição.";
+    registrosAuditoria.unshift({ id: proximoId(), ...pendenciaTempData });
+    pendenciaTempData = null;
+    salvarDados();
+  }
+  $("modalPrazo").classList.add("hidden");
+  renderizarTabelaLancamentos();
+  atualizarDashboard();
+}
+function cancelarPrazoPendente() {
+  pendenciaTempData = null;
+  $("modalPrazo").classList.add("hidden");
+}
+
+function abrirModalCadastro() { $("modalCadastro").classList.remove("hidden"); }
+function fecharModalCadastro() { $("modalCadastro").classList.add("hidden"); $("formCadastroItem").reset(); }
+function salvarNovoCadastroItem(e) {
+  e.preventDefault();
+  const codigo = $("cadCodigo").value.trim();
+  if (baseCriterios.some(c => c.codigo === codigo)) {
+    alert(`O código ${codigo} já está cadastrado.`);
+    return;
+  }
+  baseCriterios.push({
+    setor: $("cadSetor").value,
+    subsetor: $("cadSubsetor").value.trim(),
+    codigo,
+    criterio: $("cadCriterio").value.trim()
+  });
+  salvarDados();
+  fecharModalCadastro();
+  alert("Novo item/critério cadastrado com sucesso!");
+}
+
+/* ================= BADGES ================= */
+function getBadgeHTML(s) {
+  if (s === "Conforme") return `<span class="badge badge-conforme"><i class="fa-solid fa-circle-check"></i>Conforme</span>`;
+  if (s === "Não Conforme") return `<span class="badge badge-nao-conforme"><i class="fa-solid fa-circle-xmark"></i>Não Conforme</span>`;
+  if (s === "NC c/ Ação Programada") return `<span class="badge badge-andamento"><i class="fa-solid fa-clock"></i>Ação Programada</span>`;
+  return `<span class="badge bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Não Avaliado</span>`;
+}
+function getStatusBadgeHTML(s) {
+  if (s === "Concluído") return `<span class="badge badge-conforme">Concluído</span>`;
+  if (s === "Pendente") return `<span class="badge badge-nao-conforme">Pendente</span>`;
+  if (s === "Em Andamento") return `<span class="badge badge-andamento">Em Andamento</span>`;
+  return `<span class="badge bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${esc(s)}</span>`;
+}
+
+/* ================= DASHBOARD ================= */
+const FILTROS_STATUS = [
+  ["TODOS", "Todos"], ["Conforme", "Conforme (C)"], ["Não Conforme", "Não Conforme (NC)"],
+  ["NC c/ Ação Programada", "NC c/ Ação Programada"], ["Concluído", "Concluído"],
+  ["Pendente", "Pendente"], ["Em Andamento", "Em Andamento"]
+];
+function renderizarPillsStatus() {
+  const box = $("pillsStatus");
+  box.querySelectorAll("button").forEach(b => b.remove());
+  FILTROS_STATUS.forEach(([valor, rotulo]) => {
+    const b = document.createElement("button");
+    b.className = "pill " + (valor === filtroStatusAtual ? "pill-on" : "pill-off");
+    b.textContent = rotulo;
+    b.onclick = () => setFiltroStatus(valor);
+    box.appendChild(b);
+  });
+}
+function setFiltroStatus(st) {
+  filtroStatusAtual = st;
+  renderizarPillsStatus();
+  atualizarDashboard();
+}
+
+function atualizarDashboard() {
+  const setor = $("dashFilterSetor").value;
+  const ini = $("dashFilterDataIni").value;
+  const fim = $("dashFilterDataFim").value;
+  const q = $("dashFilterQuery").value.toLowerCase().trim();
+
+  const base = registrosAuditoria.filter(i =>
+    (setor === "TODOS" || i.setor === setor) &&
+    (!ini || i.data >= ini) && (!fim || i.data <= fim) &&
+    (!q || i.criterio.toLowerCase().includes(q) || i.responsavel.toLowerCase().includes(q))
+  );
+
+  const dados = base.filter(i => {
+    if (["Conforme", "Não Conforme", "NC c/ Ação Programada"].includes(filtroStatusAtual)) return i.statusConf === filtroStatusAtual;
+    if (["Concluído", "Pendente", "Em Andamento"].includes(filtroStatusAtual)) return i.statusExec === filtroStatusAtual;
+    return true;
+  });
+
+  const total = dados.length;
+  const conf = dados.filter(d => d.statusConf === "Conforme").length;
+  const nc = dados.filter(d => d.statusConf === "Não Conforme").length;
+  const acaoProg = dados.filter(d => d.statusConf === "NC c/ Ação Programada").length;
+  const ncTotal = nc + acaoProg;
+  const pend = dados.filter(d => d.statusExec === "Pendente" || d.statusExec === "Em Andamento").length;
+
+  const idx = total ? Math.round((conf / total) * 100) : 0;
+  const pctNC = total ? Math.round((ncTotal / total) * 100) : 0;
+
+  let cls = ["Insatisfatório", "text-rose-500"];
+  if (idx >= 95) cls = ["Excelente", "text-emerald-500"];
+  else if (idx >= 90) cls = ["Bom", "text-emerald-400"];
+  else if (idx >= 80) cls = ["Regular", "text-amber-500"];
+  if (!total) cls = ["Sem dados", "text-slate-400"];
+
+  $("kpiTotal").innerText = total;
+  $("kpiIndice").innerText = `${idx}%`;
+  $("kpiIndiceClass").innerText = cls[0];
+  $("kpiIndiceClass").className = `text-[11px] font-bold ${cls[1]}`;
+  $("kpiNC").innerText = ncTotal;
+  $("kpiNCSub").innerText = `${pctNC}% do total exibido`;
+  $("kpiPlanos").innerText = pend;
+
+  if (chartDonutObj) { chartDonutObj.data.datasets[0].data = [conf, nc, acaoProg]; chartDonutObj.update(); }
+  atualizarGraficoBarras(dados);
+  atualizarGraficoEvolucaoLinha(base);
+}
+
+function inicializarGraficos() {
+  aplicarTemaGraficos();
+  const dark = document.documentElement.classList.contains("dark");
+
+  chartDonutObj = new Chart($("chartDonut"), {
+    type: "doughnut",
+    data: {
+      labels: ["Conforme", "Não Conforme", "NC c/ Ação Programada"],
+      datasets: [{ data: [0, 0, 0], backgroundColor: ["#166534", "#ef4444", "#f59e0b"], borderWidth: 2, borderColor: dark ? "#0f172a" : "#ffffff" }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } } }
+  });
+
+  chartBarrasObj = new Chart($("chartBarras"), {
+    type: "bar",
+    data: {
+      labels: ["Área de Apoio", "Expedição", "Manutenção", "Produção", "Suprimentos"],
+      datasets: [
+        { label: "Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#166534", borderRadius: 4 },
+        { label: "Não Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#ef4444", borderRadius: 4 },
+        { label: "Ação Programada", data: [0, 0, 0, 0, 0], backgroundColor: "#f59e0b", borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } }
+    }
+  });
+
+  chartEvolucaoObj = new Chart($("chartEvolucaoLinha"), {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Taxa BPF (%)", data: [], borderColor: "#16a34a", backgroundColor: "#16a34a",
+        borderWidth: 2.5, pointBackgroundColor: "#16a34a", pointBorderColor: "#ffffff", pointBorderWidth: 2,
+        pointRadius: 5, pointHoverRadius: 7, tension: 0.2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Conformidade BPF: ${c.parsed.y}%` } } }
+    }
+  });
+}
+
+function atualizarGraficoBarras(dados) {
+  if (!chartBarrasObj) return;
+  const pct = (s, status) => {
+    const sub = dados.filter(d => d.setor === s);
+    return sub.length ? Math.round((sub.filter(d => d.statusConf === status).length / sub.length) * 100) : 0;
+  };
+  chartBarrasObj.data.datasets[0].data = SETORES.map(s => pct(s, "Conforme"));
+  chartBarrasObj.data.datasets[1].data = SETORES.map(s => pct(s, "Não Conforme"));
+  chartBarrasObj.data.datasets[2].data = SETORES.map(s => pct(s, "NC c/ Ação Programada"));
+  chartBarrasObj.update();
+}
+
+function atualizarGraficoEvolucaoLinha(registros) {
+  if (!chartEvolucaoObj) return;
+  const meses = {};
+  registros.forEach(r => {
+    const p = (r.data || "").split("-");
+    if (p.length !== 3) return;
+    const k = `${p[0]}-${p[1]}`;
+    meses[k] = meses[k] || { total: 0, conf: 0 };
+    meses[k].total++;
+    if (r.statusConf === "Conforme") meses[k].conf++;
+  });
+
+  const chaves = Object.keys(meses).sort();
+  const labels = chaves.map(k => { const [a, m] = k.split("-"); return `${getNomeMesAbrev(+m)}/${a.slice(2)}`; });
+  const valores = chaves.map(k => Math.round((meses[k].conf / meses[k].total) * 100));
+
+  chartEvolucaoObj.data.labels = labels;
+  chartEvolucaoObj.data.datasets[0].data = valores;
+  chartEvolucaoObj.update();
+
+  const txt = $("txtVariacaoPct"), box = $("boxVariacaoMes");
+  const boxBase = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border ";
+  if (valores.length < 2) {
+    txt.innerText = "-";
+    txt.className = "text-sm font-extrabold text-slate-400";
+    box.className = boxBase + "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
+    return;
+  }
+  const diff = valores[valores.length - 1] - valores[valores.length - 2];
+  if (diff >= 0) {
+    txt.innerText = `+${diff}%`;
+    txt.className = "text-sm font-extrabold text-emerald-600 dark:text-emerald-400";
+    box.className = boxBase + "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60";
+  } else {
+    txt.innerText = `${diff}%`;
+    txt.className = "text-sm font-extrabold text-rose-600 dark:text-rose-400";
+    box.className = boxBase + "bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60";
+  }
+}
+
+/* ================= INICIALIZAÇÃO ================= */
+document.addEventListener("DOMContentLoaded", () => {
+  carregarDados();
+  renderizarPillsStatus();
+  renderizarTabelaLancamentos();
+  inicializarGraficos();
+  atualizarDashboard();
+});
+</script>
+</body>
+</html>
