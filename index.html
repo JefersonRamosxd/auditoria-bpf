@@ -1,10 +1,9 @@
-HTML
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Auditoria BPF - Campo Nutrição Animal</title>
+<title>Sistema de Auditorias - Campo Nutrição Animal</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>tailwind.config = { darkMode: 'class' }</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -41,8 +40,8 @@ HTML
 <style>
   html { -webkit-text-size-adjust: 100%; }
   button, a, label, select { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  #listaSetores > * { width: 14rem; }
-  @media (min-width: 1024px) { #listaSetores > * { width: 100%; } }
+  #listaSetores > *, #lista5sSetores > * { width: 14rem; }
+  @media (min-width: 1024px) { #listaSetores > *, #lista5sSetores > * { width: 100%; } }
   @media screen and (max-width: 767px) {
     .tabela-cards thead { display: none; }
     .tabela-cards, .tabela-cards tbody { display: block; width: 100%; }
@@ -71,6 +70,28 @@ HTML
     .print-area { box-shadow: none !important; border: none !important; }
   }
 </style>
+<style>
+  .pdf-sheet { background:#fff; color:#000; font-family:Calibri,Carlito,Arial,sans-serif; font-size:12px; padding:12px; position:relative; max-width:1100px; min-width:900px; -webkit-print-color-adjust:exact; print-color-adjust:exact; page:pdf5s; }
+  .pdf-sheet::before { content:""; position:absolute; inset:0; background:url(https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png) center 62%/58% no-repeat; opacity:.09; pointer-events:none; }
+  .pdf-sheet table { width:100%; border-collapse:collapse; table-layout:fixed; position:relative; margin-top:-1px; break-inside:avoid; }
+  .pdf-sheet td, .pdf-sheet th { border:1px solid #000; padding:1px 6px; text-align:center; vertical-align:middle; font-weight:400; line-height:1.3; word-wrap:break-word; }
+  .pdf-sheet .gray { background:#c9c9c9 !important; font-weight:700; }
+  .pdf-sheet .esq { text-align:left; }
+  .pdf-sheet .tit { font-size:22px; font-weight:700; padding:22px 6px; }
+  .pdf-sheet .rev { width:150px; font-size:12px; }
+  .pdf-sheet .regras { text-align:left; font-size:10px; padding:2px 6px; vertical-align:top; }
+  .pdf-sheet .nota { font-size:14px; font-weight:700; }
+  .pdf-sheet .obs { font-size:9.5px; font-weight:400; font-style:italic; margin-top:3px; }
+  .pdf-sheet table.q { margin-top:-1px; }
+  @page pdf5s { size:A4 landscape; margin:8mm; }
+  @media print {
+    body.imprimindo-pdf > *:not(#previewPDF) { display:none !important; }
+    body.imprimindo-pdf #previewPDF { position:static !important; display:block !important; background:#fff !important; padding:0 !important; overflow:visible !important; }
+    body.imprimindo-pdf .pdf-toolbar { display:none !important; }
+    body.imprimindo-pdf .pdf-sheet { min-width:0; max-width:none; padding:0; }
+    body.imprimindo-pdf .pdf-sheet::before { position:fixed; }
+  }
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
@@ -81,7 +102,7 @@ HTML
       <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="max-h-16 w-auto object-contain">
     </div>
     <div>
-      <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Auditoria BPF</h2>
+      <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Sistema de Auditorias</h2>
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Acesso Restrito</p>
     </div>
     <form onsubmit="realizarLogin(event)" class="space-y-4 text-left">
@@ -118,9 +139,9 @@ HTML
       </button>
       <div id="menuModulos" class="hidden absolute left-0 top-full pt-1 w-64 z-50">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-2">
-          <a href="#" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
-          <a href="#" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
-          <a href="#" onclick="selecionarModulo('retidos'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-box-archive text-slate-400"></i><span>CONTROLE RETIDOS</span></a>
+          <a href="#" id="mod-bpf" onclick="selecionarModulo('bpf'); return false;" class="px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-[#166534]"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span>AUDITORIA INTERNA BPF</span></a>
+          <a href="#" id="mod-5s" onclick="selecionarModulo('5s'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-broom text-slate-400"></i><span>AUDITORIA INTERNA 5S</span></a>
+          <a href="#" onclick="selecionarModulo('nc'); return false;" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 border-l-4 border-transparent"><i class="fa-solid fa-triangle-exclamation text-slate-400"></i><span>NÃO CONFORMIDADES</span></a>
         </div>
       </div>
     </div>
@@ -128,23 +149,26 @@ HTML
     <!-- Logo no centro -->
     <div class="justify-self-center text-center min-w-0">
       <img src="https://solutudo-cdn-proxy.soluall.net/prod/adv_ads/5db6de2d-1860-4a29-a4a1-36d1ac1e0181/694aab30-506c-4133-ac12-2f97ac1e09ff.png" alt="Campo Nutrição Animal" class="h-9 sm:h-10 md:h-11 w-auto max-w-full mx-auto object-contain">
-      <h1 class="mt-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[.2em] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5"><i class="fa-solid fa-clipboard-check text-[#166534]"></i>Auditoria BPF</h1>
+      <h1 class="mt-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[.2em] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5"><i class="fa-solid fa-clipboard-check text-[#166534]"></i><span id="tituloModulo">Auditoria BPF</span></h1>
     </div>
 
-    <!-- Controles Direitos -->
+    <!-- Controles Direitos (Backup + Tema) -->
     <div class="contents md:flex md:items-center md:justify-end md:justify-self-end md:gap-2">
       <div class="col-span-3 row-start-2 grid grid-cols-2 gap-2 md:col-span-1 md:row-start-auto md:flex md:items-center">
-        <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-list-check"></i> Lançamentos</button>
-        <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-chart-pie"></i> Dashboard BPF</button>
+        <button id="btnNavLancamentos" onclick="mudarTela('lancamentos')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-list-check"></i> <span id="lblLanc">Lançamentos</span></button>
+        <button id="btnNavDashboard" onclick="mudarTela('dashboard')" class="btn !px-3 !py-1.5 text-xs w-full md:w-auto"><i class="fa-solid fa-chart-pie"></i> <span id="lblDashboard">Dashboard BPF</span></button>
       </div>
-      <button onclick="alternarModoEscuro()" class="col-start-3 row-start-1 md:col-start-auto md:row-start-auto justify-self-end p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema" aria-label="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
+      <div class="col-start-3 row-start-1 md:col-start-auto md:row-start-auto justify-self-end flex items-center gap-2">
+        <button onclick="executarBackupManual()" class="p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Backup Automático Ativo (Clique para exportar JSON)"><i class="fa-solid fa-cloud-arrow-down text-sm text-[#166534]"></i></button>
+        <button onclick="alternarModoEscuro()" class="p-2.5 min-w-[42px] min-h-[42px] rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm" title="Alternar tema" aria-label="Alternar tema"><i id="iconeTema" class="fa-solid fa-sun text-sm"></i></button>
+      </div>
     </div>
   </div>
 </header>
 
 <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-  <!-- TELA 1: LANÇAMENTOS -->
+  <!-- TELA 1: LANÇAMENTOS BPF -->
   <section id="telaLancamentos" class="space-y-6">
     <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -206,7 +230,7 @@ HTML
     </div>
   </section>
 
-  <!-- TELA 2: DASHBOARD -->
+  <!-- TELA 2: DASHBOARD BPF -->
   <section id="telaDashboard" class="space-y-6 hidden">
     <div class="card p-5 space-y-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -227,7 +251,6 @@ HTML
       </div>
     </div>
 
-    <!-- Barra de status -->
     <div class="card sticky z-30 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 print:static" style="top: var(--hdr, 0px)">
       <div id="pillsStatus" class="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]">
         <span class="text-xs font-bold uppercase text-slate-400 mr-2 shrink-0">Status:</span>
@@ -286,17 +309,159 @@ HTML
       </div>
     </div>
   </section>
+
+  <!-- TELA 3: LANÇAMENTOS 5S -->
+  <section id="tela5sLanc" class="space-y-6 hidden">
+    <div class="no-print card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-bold">Lançamentos Auditoria</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filtre por setor, data ou código, ou inicie uma nova auditoria 5S.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:flex sm:items-center gap-3">
+        <button onclick="abrirModalNova5s()" class="btn btn-p"><i class="fa-solid fa-plus"></i><span>Iniciar Nova Auditoria</span></button>
+        <button onclick="abrirModalCadastro()" class="btn btn-s"><i class="fa-solid fa-folder-plus"></i><span>Cadastro</span></button>
+      </div>
+    </div>
+
+    <div class="no-print card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <div>
+        <label class="lbl">Setor Auditado</label>
+        <select id="f5sSetor" onchange="renderizar5sLanc()" class="inp">
+          <option value="TODOS">Todos os Setores</option>
+          <option value="ÁREA DE APOIO">Área de Apoio</option>
+          <option value="EXPEDIÇÃO">Expedição</option>
+          <option value="MANUTENÇÃO">Manutenção</option>
+          <option value="PRODUÇÃO">Produção</option>
+          <option value="SUPRIMENTOS">Suprimentos</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Data da Auditoria</label>
+        <input type="date" id="f5sData" onchange="renderizar5sLanc()" class="inp">
+      </div>
+      <div>
+        <label class="lbl">Pesquisar por Código / Setor</label>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+          <input type="text" id="f5sBusca" oninput="renderizar5sLanc()" placeholder="Ex: A1, produção..." class="inp !pl-10">
+        </div>
+      </div>
+      <button onclick="limparFiltros5s()" class="btn btn-s"><i class="fa-solid fa-eraser"></i><span>Limpar filtros</span></button>
+    </div>
+
+    <div class="card overflow-hidden print-area">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 justify-between items-center bg-slate-50 dark:bg-slate-950/50">
+        <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-list text-[#166534]"></i><span>Lista de Auditorias 5S</span></h3>
+        <div class="flex items-center gap-3">
+          <span id="counter5s" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Exibindo 0 registros</span>
+          <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs"><i class="fa-solid fa-print"></i><span>Imprimir / PDF</span></button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="tabela-cards w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <th class="th">Código / Data</th><th class="th">Setor &amp; Subsetor</th><th class="th">Pontuação 5S</th>
+              <th class="th text-center">Status</th><th class="th text-center">Avaliação 5S</th><th class="th">Prazo / Vencimento</th>
+              <th class="th text-center no-print">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody5s" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELA 4: DASHBOARD 5S -->
+  <section id="tela5sDash" class="space-y-6 hidden">
+    <div class="card p-5 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="lbl">Setor Auditado</label>
+          <select id="d5sSetor" onchange="atualizarDashboard5s()" class="inp">
+            <option value="TODOS">Todos os Setores</option>
+            <option value="ÁREA DE APOIO">Área de Apoio</option>
+            <option value="EXPEDIÇÃO">Expedição</option>
+            <option value="MANUTENÇÃO">Manutenção</option>
+            <option value="PRODUÇÃO">Produção</option>
+            <option value="SUPRIMENTOS">Suprimentos</option>
+          </select>
+        </div>
+        <div><label class="lbl">Data Inicial</label><input type="date" id="d5sIni" onchange="atualizarDashboard5s()" class="inp"></div>
+        <div><label class="lbl">Data Final</label><input type="date" id="d5sFim" onchange="atualizarDashboard5s()" class="inp"></div>
+        <div><label class="lbl">Pesquisar</label><input type="text" id="d5sQuery" oninput="atualizarDashboard5s()" placeholder="Código, setor, subsetor..." class="inp"></div>
+      </div>
+    </div>
+
+    <div class="card sticky z-30 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 print:static" style="top: var(--hdr, 0px)">
+      <div id="pillsStatus5s" class="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]">
+        <span class="text-xs font-bold uppercase text-slate-400 mr-2 shrink-0">Status:</span>
+      </div>
+      <button onclick="window.print()" class="no-print btn btn-s !px-3 !py-1.5 text-xs shrink-0" aria-label="Imprimir / PDF"><i class="fa-solid fa-print"></i><span class="hidden sm:inline">Imprimir / PDF</span></button>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="kpi"><div><span class="kpi-t">Total de Auditorias</span><div id="k5sTotal" class="kpi-v">0</div><span class="text-[11px] text-slate-500">Realizadas no período</span></div>
+        <div class="kpi-i bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"><i class="fa-solid fa-list-ol"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Índice 5S (média)</span><div id="k5sIndice" class="kpi-v text-emerald-600 dark:text-emerald-400">0 pts</div><span id="k5sIndiceClass" class="text-[11px] font-bold text-emerald-500">-</span></div>
+        <div class="kpi-i bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"><i class="fa-solid fa-chart-line"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Não Conformidades</span><div id="k5sNC" class="kpi-v text-rose-600 dark:text-rose-400">0</div><span id="k5sNCSub" class="text-[11px] text-rose-500 font-medium">0% do total exibido</span></div>
+        <div class="kpi-i bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
+      <div class="kpi"><div><span class="kpi-t">Planos em Aberto</span><div id="k5sPlanos" class="kpi-v text-amber-600 dark:text-amber-400">0</div><span class="text-[11px] text-slate-500">Requerem acompanhamento</span></div>
+        <div class="kpi-i bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50"><i class="fa-solid fa-clock-rotate-left"></i></div></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="card p-5">
+        <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-[#166534]"></i><span>Distribuição Geral 5S</span></h3>
+        <div class="relative h-56"><canvas id="chart5Donut"></canvas></div>
+      </div>
+      <div class="card p-5 lg:col-span-2">
+        <h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-simple text-[#166534]"></i><span>Pontuação Média por Setor (pts)</span></h3>
+        <div class="relative h-56"><canvas id="chart5Barras"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card p-4 sm:p-6 space-y-4">
+      <div class="flex flex-col xl:flex-row xl:items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-[#166534]"></i><span>Evolução Mensal da Pontuação 5S (pts)</span></h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Pontuação média das auditorias por mês. Respeita todos os filtros acima.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#10b981]"></span>Subiu</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#ef4444]"></span>Caiu</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 h-[3px] rounded bg-[#64748b]"></span>Estável / 1º mês</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-amber-500"></span><span id="legMeta5s">Meta</span></span>
+          <div id="box5sVar" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">vs Mês Anterior:</span>
+            <span id="txt5sVar" class="text-sm font-extrabold">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
+        <div>
+          <p class="lbl">Pontuação por setor <span class="normal-case font-medium text-slate-400">(clique para filtrar)</span></p>
+          <div id="lista5sSetores" class="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0"></div>
+        </div>
+        <div class="min-w-0">
+          <div class="relative h-72"><canvas id="chart5Evol"></canvas></div>
+          <div id="top5sSubsetores" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-5 border-t border-slate-200 dark:border-slate-800"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 </div>
 
-<!-- MODAL: CADASTRO COM ABA DE LISTA E EXCLUSÃO -->
+<!-- MODAL: CADASTRO COM ABA DE EXCLUSÃO -->
 <div id="modalCadastro" class="modal hidden">
   <div class="box max-w-lg">
-    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-folder-plus text-[#166534]"></i>Gerenciar Itens e Cadastros BPF</span>
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-folder-plus text-[#166534]"></i><span id="tituloCadastro">Gerenciar Cadastros</span></span>
       <button onclick="fecharModalCadastro()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button></div>
     <div class="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 px-4 pt-2 gap-2">
-      <button id="btnAbaNovoItem" onclick="alternarAbaCadastro('novo')" class="px-3 py-2 text-xs font-bold border-b-2 border-[#166534] text-[#166534]">Novo Item</button>
-      <button id="btnAbaListaItens" onclick="alternarAbaCadastro('lista')" class="px-3 py-2 text-xs font-semibold text-slate-500">Itens Cadastrados (<span id="totalItensBase">0</span>)</button>
+      <button id="btnAbaNovoCad" onclick="alternarAbaCad('novo')" class="px-3 py-2 text-xs font-bold border-b-2 border-[#166534] text-[#166534]">Novo Cadastro</button>
+      <button id="btnAbaListaCad" onclick="alternarAbaCad('lista')" class="px-3 py-2 text-xs font-semibold text-slate-500">Cadastrados (<span id="totalCadastrados">0</span>)</button>
     </div>
     <form id="formCadastroItem" onsubmit="salvarNovoCadastroItem(event)" class="p-6 space-y-4">
       <div><label class="lbl">Setor / Aba</label>
@@ -307,17 +472,17 @@ HTML
         </select></div>
       <div class="grid grid-cols-2 gap-3">
         <div><label class="lbl">Subsetor</label><input type="text" id="cadSubsetor" placeholder="Ex: Resíduos, Estoque..." class="inp" required></div>
-        <div><label class="lbl">Item / Código</label><input type="text" id="cadCodigo" placeholder="Ex: 2.2, 25.3" class="inp" required></div>
+        <div><label class="lbl">Item / Código</label><input type="text" id="cadCodigo" placeholder="Ex: 2.2, A1..." class="inp" required></div>
       </div>
-      <div><label class="lbl">Critério</label><textarea id="cadCriterio" rows="2" placeholder="Descrição detalhada do critério BPF..." class="inp" required></textarea></div>
+      <div id="cadCriterioWrap"><label class="lbl">Critério</label><textarea id="cadCriterio" rows="2" placeholder="Descrição detalhada do critério..." class="inp" required></textarea></div>
       <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
         <button type="button" onclick="fecharModalCadastro()" class="btn btn-g">Cancelar</button>
         <button type="submit" class="btn btn-p">Salvar</button>
       </div>
     </form>
-    <div id="containerListaCadastrados" class="p-4 space-y-3 hidden max-h-80 overflow-y-auto">
-      <input type="text" id="buscaCadastrados" oninput="renderizarListaCadastrados()" placeholder="Pesquisar por código, critério..." class="inp text-xs">
-      <div id="listaItensBase" class="space-y-2"></div>
+    <div id="containerListaCad" class="p-4 space-y-3 hidden max-h-80 overflow-y-auto">
+      <input type="text" id="buscaCad" oninput="renderizarListaCadastros()" placeholder="Pesquisar por código, setor..." class="inp text-xs">
+      <div id="listaCadItems" class="space-y-2"></div>
     </div>
   </div>
 </div>
@@ -327,7 +492,7 @@ HTML
   <div class="box max-w-sm p-6 space-y-4">
     <div class="flex items-center gap-3 text-amber-600 dark:text-amber-400"><i class="fa-solid fa-hourglass-start text-2xl"></i>
       <h3 class="font-bold text-base text-slate-900 dark:text-white">Definir Prazo da Pendência</h3></div>
-    <p class="text-xs text-slate-500 dark:text-slate-400">Informe o prazo em dias para resolução desta pendência BPF:</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400">Informe o prazo em dias para resolução desta pendência:</p>
     <input type="number" id="inputDiasPrazo" min="0" value="5" class="inp font-bold text-center !text-lg">
     <div class="flex justify-end gap-2 pt-2">
       <button onclick="cancelarPrazoPendente()" class="btn btn-g">Cancelar</button>
@@ -341,8 +506,8 @@ HTML
   <div class="box max-w-sm p-6 space-y-4">
     <div class="flex items-center gap-3 text-[#166534]"><i class="fa-solid fa-pen-to-square text-xl"></i>
       <h3 class="font-bold text-base text-slate-900 dark:text-white">Editar Registro</h3></div>
-    <input type="hidden" id="editIdRegistro">
-    <div><label class="lbl">Avaliação BPF</label>
+    <input type="hidden" id="editIdRegistro"><input type="hidden" id="editModulo" value="bpf">
+    <div><label class="lbl">Avaliação</label>
       <select id="editStatusConf" class="inp">
         <option value="Conforme">Conforme</option><option value="Não Conforme">Não Conforme</option><option value="NC c/ Ação Programada">NC c/ Ação Programada</option>
       </select></div>
@@ -359,7 +524,7 @@ HTML
   <img id="imgFoto" alt="Foto de evidência" class="max-h-[85vh] max-w-full rounded-xl shadow-2xl">
 </div>
 
-<!-- MODAL: NOVA AUDITORIA -->
+<!-- MODAL: NOVA AUDITORIA BPF -->
 <div id="modalAuditoria" class="modal hidden">
   <div class="box max-w-lg">
     <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-[#166534]"></i>Registrar Nova Inspeção BPF</span>
@@ -399,6 +564,73 @@ HTML
   </div>
 </div>
 
+<!-- MODAL: INICIAR NOVA AUDITORIA 5S -->
+<div id="modalNova5s" class="modal hidden">
+  <div class="box max-w-md">
+    <div class="box-h"><span class="flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-[#166534]"></i>Iniciar nova auditoria 5S</span>
+      <button onclick="fecharModalNova5s()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <form id="formNova5s" onsubmit="iniciarAuditoria5s(event)" class="p-6 space-y-4">
+      <div><label class="lbl">Código do setor</label><input type="text" id="n5Codigo" oninput="autopreencher5s()" placeholder="Ex: A1, P1, S1" class="inp" autocomplete="off" required>
+        <p id="n5Aviso" class="hidden text-[11px] text-rose-500 mt-1">Código não encontrado. Cadastre-o em "Cadastro" primeiro.</p></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="lbl">Setor Auditado</label><input type="text" id="n5Setor" class="inp" placeholder="Preenchido pelo código" readonly></div>
+        <div><label class="lbl">Subsetor</label><input type="text" id="n5Subsetor" class="inp" placeholder="Preenchido pelo código" readonly></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="lbl">Data da Auditoria</label><input type="text" id="n5Data" class="inp" readonly></div>
+        <div><label class="lbl">Responsável</label><input type="text" id="n5Resp" class="inp" readonly></div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" onclick="fecharModalNova5s()" class="btn btn-g">Cancelar</button>
+        <button type="submit" class="btn btn-p"><i class="fa-solid fa-play"></i>Iniciar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: QUESTIONÁRIO 5S -->
+<div id="modalQuest5s" class="modal hidden !items-start sm:!items-center">
+  <div class="box max-w-3xl">
+    <div class="box-h"><span class="flex items-center gap-2 min-w-0"><i class="fa-solid fa-clipboard-list text-[#166534]"></i><span class="truncate">Auditoria 5S · <span id="qTitulo"></span></span></span>
+      <button onclick="fecharQuest5s()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+    <div id="qCorpo" class="p-4 sm:p-6 space-y-4 max-h-[68dvh] overflow-y-auto"></div>
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/50">
+      <div id="qTotal" class="text-sm font-extrabold">Pontuação: 0 / 30</div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="fecharQuest5s()" class="btn btn-g">Cancelar</button>
+        <button onclick="visualizarQuest5s()" class="btn btn-s"><i class="fa-solid fa-eye"></i>Visualizar</button>
+        <button onclick="salvarQuest5s()" class="btn btn-p"><i class="fa-solid fa-floppy-disk"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ATRIBUIR NOTA -->
+<div id="modalNota5s" class="modal hidden !z-[65]">
+  <div class="box max-w-sm p-6 space-y-4">
+    <div class="flex items-center gap-3 text-[#166534]"><i class="fa-solid fa-star-half-stroke text-xl"></i><h3 class="font-bold text-base text-slate-900 dark:text-white">Atribuir nota</h3></div>
+    <p id="notaParam" class="text-xs text-slate-500 dark:text-slate-400"></p>
+    <div><label class="lbl">Pontuação possível</label><div id="notaChips" class="flex flex-wrap gap-2"></div></div>
+    <div><label class="lbl">Observação</label><textarea id="notaObs" rows="3" class="inp" placeholder="Opcional: descreva o que foi observado..."></textarea></div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+      <button onclick="cancelarNota5s()" class="btn btn-g">Cancelar</button>
+      <button onclick="confirmarNota5s()" class="btn btn-p">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISUALIZAÇÃO DO PDF -->
+<div id="previewPDF" class="hidden fixed inset-0 z-[70] bg-slate-950/90 overflow-auto p-3 sm:p-6">
+  <div class="pdf-toolbar max-w-[1100px] mx-auto mb-3 flex flex-wrap items-center justify-between gap-2">
+    <h3 class="text-white font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-file-pdf text-rose-400"></i>Visualização do PDF</h3>
+    <div class="flex gap-2">
+      <button onclick="fecharPreview5s()" class="btn btn-s">Fechar</button>
+      <button onclick="imprimirPreview5s()" class="btn btn-p"><i class="fa-solid fa-print"></i>Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+  <div id="pdfSheet" class="pdf-sheet mx-auto"></div>
+</div>
+
 <script>
 /* ================= LOGIN ================= */
 function realizarLogin(e) {
@@ -410,7 +642,7 @@ function realizarLogin(e) {
     $("appPrincipal").classList.remove("hidden");
     $("appPrincipal").classList.add("flex");
     ajustarAlturaHeader();
-    [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(ch => ch && ch.resize());
+    todosGraficos().forEach(ch => ch && ch.resize());
   } else {
     $("erroLogin").classList.remove("hidden");
     $("inputSenha").value = "";
@@ -418,8 +650,9 @@ function realizarLogin(e) {
   }
 }
 
-/* ================= DADOS ================= */
+/* ================= DADOS E PERSISTÊNCIA ================= */
 const STORAGE_KEY = "bpf_auditoria_v2";
+const STORAGE_5S = "bpf_auditoria_5s_v1";
 
 const responsaveisSetor = {
   "ÁREA DE APOIO": "Fernanda Turella",
@@ -440,6 +673,14 @@ const baseSeed = [
   { setor: "SUPRIMENTOS", subsetor: "AREA DE PALETES", codigo: "1.0", criterio: "Teto em bom estado de conservação" }
 ];
 
+const base5sSeed = [
+  { setor: "ÁREA DE APOIO", subsetor: "RESIDUOS RECICLAVEIS", codigo: "A1" },
+  { setor: "EXPEDIÇÃO", subsetor: "ESTOQUE PA", codigo: "E1" },
+  { setor: "MANUTENÇÃO", subsetor: "MANUTENÇÃO", codigo: "M1" },
+  { setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "P1" },
+  { setor: "SUPRIMENTOS", subsetor: "AREA DE PALETES", codigo: "S1" }
+];
+
 const registrosSeed = [
   { id: "BPF-101", data: "2026-05-15", setor: "PRODUÇÃO", subsetor: "ROTULAGEM", codigo: "12.0", criterio: "Uso de EPIs", statusExec: "Concluído", statusConf: "Conforme", responsavel: "João Vinicius", prazoDias: 0, vencimento: "", acao: "-", observacoes: "" },
   { id: "BPF-102", data: "2026-06-10", setor: "ÁREA DE APOIO", subsetor: "RESIDUOS", codigo: "2.1", criterio: "Sanitização", statusExec: "Pendente", statusConf: "Não Conforme", responsavel: "Fernanda Turella", prazoDias: 5, vencimento: "2026-06-15", acao: "Sanitizar", observacoes: "" },
@@ -454,9 +695,18 @@ const registrosSeed = [
 
 let baseCriterios = structuredClone(baseSeed);
 let registrosAuditoria = structuredClone(registrosSeed);
-let filtroStatusAtual = "TODOS";
-let pendenciaTempData = null;
+let base5s = structuredClone(base5sSeed);
+let auditorias5s = [];
+let moduloAtual = "bpf";
+const AUDITOR_5S = "Andressa Gabryella Cassemira";
+const META_BPF = 95;
+const META_5S = 80;
+
+let filtroStatusAtual = "TODOS", filtroStatus5s = "TODOS";
+let pendenciaTempData = null, quest5s = null, notaTemp = null;
 let chartDonutObj = null, chartBarrasObj = null, chartEvolucaoObj = null;
+let chart5Donut = null, chart5Barras = null, chart5Evol = null;
+const todosGraficos = () => [chartDonutObj, chartBarrasObj, chartEvolucaoObj, chart5Donut, chart5Barras, chart5Evol].filter(Boolean);
 
 /* ================= UTILITÁRIOS ================= */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -481,35 +731,60 @@ function proximoId() {
   const max = registrosAuditoria.reduce((m, r) => Math.max(m, parseInt(String(r.id).split("-")[1]) || 0), 100);
   return `BPF-${max + 1}`;
 }
+function proximoId5s() {
+  const max = auditorias5s.reduce((m, r) => Math.max(m, parseInt(String(r.id).split("-")[1]) || 0), 100);
+  return `5S-${max + 1}`;
+}
 function lerPrazo(valor, padrao) {
   const n = parseInt(valor, 10);
   return Number.isNaN(n) || n < 0 ? padrao : n;
 }
-const META_BPF = 95;
-function corVariacao(valores, i) {
-  if (i === 0) return "#64748b";
-  const diff = valores[i] - valores[i - 1];
-  return diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#64748b";
-}
+const corVariacao = (valores, i) => i === 0 ? "#64748b" : valores[i] > valores[i - 1] ? "#10b981" : valores[i] < valores[i - 1] ? "#ef4444" : "#64748b";
 const getNomeMesAbrev = m => ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][m - 1] || "";
 
-/* ================= PERSISTÊNCIA ================= */
+/* ================= PERSISTÊNCIA AUTOMÁTICA ================= */
 function salvarDados() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ registros: registrosAuditoria, base: baseCriterios }));
-  } catch (e) {
-    alert("Não foi possível salvar no navegador.");
-  }
+    localStorage.setItem(STORAGE_5S, JSON.stringify({ auditorias: auditorias5s, base: base5s }));
+  } catch (e) { console.warn("Erro ao salvar dados automaticamente", e); }
 }
 function carregarDados() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    if (Array.isArray(d.registros)) registrosAuditoria = d.registros;
-    if (Array.isArray(d.base)) baseCriterios = d.base;
-    [...registrosAuditoria, ...baseCriterios].forEach(o => { if (o && o.setor === "AREA DE APOIO") o.setor = "ÁREA DE APOIO"; });
-  } catch (e) { console.warn("Falha ao carregar dados salvos:", e); }
+    const rawBpf = localStorage.getItem(STORAGE_KEY);
+    if (rawBpf) {
+      const d = JSON.parse(rawBpf);
+      if (Array.isArray(d.registros)) registrosAuditoria = d.registros;
+      if (Array.isArray(d.base)) baseCriterios = d.base;
+    }
+    const raw5s = localStorage.getItem(STORAGE_5S);
+    if (raw5s) {
+      const d = JSON.parse(raw5s);
+      if (Array.isArray(d.auditorias)) auditorias5s = d.auditorias;
+      if (Array.isArray(d.base)) base5s = d.base;
+    } else {
+      // Seed inicial 5S caso não exista
+      auditorias5s = [
+        seed5s("5S-101", "2026-06-12", "PRODUÇÃO", "ROTULAGEM", "P1", [3,3,3,3,3,3,3,3,3,3]),
+        seed5s("5S-102", "2026-07-08", "ÁREA DE APOIO", "RESIDUOS RECICLAVEIS", "A1", [3,1.5,3,0,3,3,0,0,3,0]),
+        seed5s("5S-103", "2026-08-14", "EXPEDIÇÃO", "ESTOQUE PA", "E1", [3,3,3,3,3,3,3,3,0,3]),
+        seed5s("5S-104", "2026-09-09", "MANUTENÇÃO", "MANUTENÇÃO", "M1", [3,3,1.5,3,3,3,3,0,3,3]),
+        seed5s("5S-105", "2026-10-02", "SUPRIMENTOS", "AREA DE PALETES", "S1", [0,-3,3,3,0,3,0,0,3,0], "NC c/ Ação Programada", 10),
+        seed5s("5S-106", "2026-10-06", "ÁREA DE APOIO", "RESIDUOS RECICLAVEIS", "A1", [3,3,3,0,3,3,3,3,3,3])
+      ];
+    }
+  } catch (e) { console.warn("Falha ao carregar dados:", e); }
+}
+
+// Botão de Backup Manual
+function executarBackupManual() {
+  salvarDados();
+  const dados = { bpf: { registros: registrosAuditoria, base: baseCriterios }, s5: { auditorias: auditorias5s, base: base5s }, dataExportacao: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `backup-sistema-auditorias-${hojeLocal()}.json`;
+  a.click(); URL.revokeObjectURL(url);
 }
 
 /* ================= TEMA / NAVEGAÇÃO ================= */
@@ -517,70 +792,61 @@ function aplicarTemaGraficos(animar = true) {
   const dark = document.documentElement.classList.contains("dark");
   Chart.defaults.color = dark ? "#94a3b8" : "#475569";
   Chart.defaults.borderColor = dark ? "rgba(148,163,184,.35)" : "rgba(71,85,105,.35)";
-  if (chartDonutObj) chartDonutObj.data.datasets[0].borderColor = dark ? "#0f172a" : "#ffffff";
-  [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update(animar ? undefined : "none"));
+  [chartDonutObj, chart5Donut].forEach(d => { if (d) d.data.datasets[0].borderColor = dark ? "#0f172a" : "#ffffff"; });
+  todosGraficos().forEach(c => c && c.update(animar ? undefined : "none"));
 }
 function alternarModoEscuro() {
-  const html = document.documentElement;
-  html.classList.toggle("dark");
-  $("iconeTema").className = html.classList.contains("dark") ? "fa-solid fa-sun text-sm" : "fa-solid fa-moon text-sm";
+  document.documentElement.classList.toggle("dark");
+  $("iconeTema").className = document.documentElement.classList.contains("dark") ? "fa-solid fa-sun text-sm" : "fa-solid fa-moon text-sm";
   aplicarTemaGraficos();
 }
-let eraDark = false;
-window.addEventListener("beforeprint", () => { eraDark = document.documentElement.classList.contains("dark"); document.documentElement.classList.remove("dark"); aplicarTemaGraficos(false); });
-window.addEventListener("afterprint", () => { if (eraDark) document.documentElement.classList.add("dark"); aplicarTemaGraficos(false); });
+window.addEventListener("beforeprint", () => { document.documentElement.classList.remove("dark"); aplicarTemaGraficos(false); });
+window.addEventListener("afterprint", () => { document.body.classList.remove("imprimindo-pdf"); aplicarTemaGraficos(false); });
 
 function toggleMenuModulos(e) { e.stopPropagation(); $("menuModulos").classList.toggle("hidden"); }
 document.addEventListener("click", () => $("menuModulos").classList.add("hidden"));
 
 function selecionarModulo(mod) {
   $("menuModulos").classList.add("hidden");
-  if (mod === "bpf") {
-    mudarTela("lancamentos");
-  } else if (mod === "5s") {
-    alert("Módulo AUDITORIA INTERNA 5S selecionado. Em breve disponível!");
-  } else if (mod === "retidos") {
-    alert("Módulo CONTROLE RETIDOS selecionado. Em breve disponível!");
-  }
+  if (mod !== "bpf" && mod !== "5s") { alert("Módulo em desenvolvimento."); return; }
+  moduloAtual = mod;
+  $("tituloModulo").textContent = mod === "bpf" ? "Auditoria BPF" : "Auditoria 5S";
+  $("lblDashboard").textContent = mod === "bpf" ? "Dashboard BPF" : "Dashboard 5S";
+  [["mod-bpf", "bpf"], ["mod-5s", "5s"]].forEach(([id, m]) => {
+    const a = $(id), on = m === mod;
+    a.classList.toggle("border-[#166534]", on); a.classList.toggle("border-transparent", !on);
+    a.classList.toggle("font-bold", on); a.classList.toggle("font-semibold", !on);
+  });
+  mudarTela("lancamentos");
 }
 
 function mudarTela(tela) {
-  const lanc = tela === "lancamentos";
-  $("telaLancamentos").classList.toggle("hidden", !lanc);
-  $("telaDashboard").classList.toggle("hidden", lanc);
+  const lanc = tela === "lancamentos", bpf = moduloAtual === "bpf";
+  $("telaLancamentos").classList.toggle("hidden", !(bpf && lanc));
+  $("telaDashboard").classList.toggle("hidden", !(bpf && !lanc));
+  $("tela5sLanc").classList.toggle("hidden", bpf || !lanc);
+  $("tela5sDash").classList.toggle("hidden", bpf || lanc);
   const base = "btn !px-3 !py-1.5 text-xs w-full md:w-auto ";
   $("btnNavLancamentos").className = base + (lanc ? "nav-on" : "nav-off");
   $("btnNavDashboard").className = base + (lanc ? "nav-off" : "nav-on");
-  if (!lanc) atualizarDashboard();
+  if (!lanc) bpf ? atualizarDashboard() : atualizarDashboard5s();
+  else if (!bpf) renderizar5sLanc();
 }
 
-/* ================= LANÇAMENTOS ================= */
+/* ================= MÓDULO BPF ================= */
 function limparFiltrosLanc() {
   $("filtroLancSetor").value = "TODOS";
   $("filtroLancData").value = "";
   $("filtroLancCodigo").value = "";
   renderizarTabelaLancamentos();
 }
-
 function renderizarTabelaLancamentos() {
-  const setorSel = $("filtroLancSetor").value;
-  const dataSel = $("filtroLancData").value;
-  const q = $("filtroLancCodigo").value.toLowerCase().trim();
-  const hoje = hojeLocal();
-
+  const setorSel = $("filtroLancSetor").value, dataSel = $("filtroLancData").value, q = $("filtroLancCodigo").value.toLowerCase().trim(), hoje = hojeLocal();
   const filtrados = registrosAuditoria.filter(i =>
-    (setorSel === "TODOS" || i.setor === setorSel) &&
-    (!dataSel || i.data === dataSel) &&
-    (!q || i.codigo.toLowerCase().includes(q) || i.criterio.toLowerCase().includes(q))
+    (setorSel === "TODOS" || i.setor === setorSel) && (!dataSel || i.data === dataSel) && (!q || i.codigo.toLowerCase().includes(q) || i.criterio.toLowerCase().includes(q))
   );
-
   $("counterLancamentos").innerText = `Exibindo ${filtrados.length} de ${registrosAuditoria.length} registros`;
-
-  if (!filtrados.length) {
-    $("tbodyLancamentos").innerHTML = `<tr><td colspan="7" data-label="" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`;
-    return;
-  }
-
+  if (!filtrados.length) { $("tbodyLancamentos").innerHTML = `<tr><td colspan="7" data-label="" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`; return; }
   $("tbodyLancamentos").innerHTML = filtrados.map(i => {
     const aberto = i.statusExec === "Pendente" || i.statusExec === "Em Andamento";
     const vencido = aberto && i.vencimento && i.vencimento < hoje;
@@ -591,106 +857,42 @@ function renderizarTabelaLancamentos() {
       <tr class="${rowClass}">
         <td class="p-3.5" data-label="Código / Data"><div class="cel"><div class="font-bold">${esc(i.codigo)}</div><div class="text-[11px] text-slate-400">${formatarData(i.data)}</div></div></td>
         <td class="p-3.5" data-label="Setor / Subsetor"><div class="cel"><div class="font-semibold text-slate-700 dark:text-slate-300">${esc(i.setor)}</div><div class="text-[11px] text-slate-400">${esc(i.subsetor)}</div></div></td>
-        <td class="p-3.5 max-w-xs" data-label="Critério"><div class="cel">
-          <p class="text-xs font-medium leading-relaxed">${esc(i.criterio)}</p>
-          ${i.observacoes ? `<p class="text-[11px] text-slate-400 mt-1 italic">Obs: ${esc(i.observacoes)}</p>` : ""}
-        </div></td>
+        <td class="p-3.5 max-w-xs" data-label="Critério"><div class="cel"><p class="text-xs font-medium leading-relaxed">${esc(i.criterio)}</p>${i.observacoes ? `<p class="text-[11px] text-slate-400 mt-1 italic">Obs: ${esc(i.observacoes)}</p>` : ""}</div></td>
         <td class="p-3.5 text-center" data-label="Status"><div class="cel">${getStatusBadgeHTML(i.statusExec)}</div></td>
         <td class="p-3.5 text-center" data-label="Avaliação BPF"><div class="cel">${getBadgeHTML(i.statusConf)}</div></td>
-        <td class="p-3.5 text-xs" data-label="Prazo / Vencimento"><div class="cel">
-          ${i.statusExec !== "Concluído" ? `
-            <div class="font-bold ${vencido ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}">${i.prazoDias ?? 0} dias</div>
-            <div class="text-[10px] ${vencido ? "text-rose-500 font-semibold" : "text-slate-400"}">${vencido ? "VENCIDO (" + formatarData(i.vencimento) + ")" : "Vence: " + formatarData(i.vencimento)}</div>
-          ` : '<span class="text-slate-400">-</span>'}
-        </div></td>
-        <td class="p-3.5 text-center no-print whitespace-nowrap" data-label="Ações"><div class="cel">
-          ${i.foto ? `<button onclick="verFoto('${id}')" title="Ver foto" class="p-2.5 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-image"></i></button>` : ""}
-          <button onclick="abrirEdicaoRapida('${id}')" title="Editar" class="p-2.5 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
-          <button onclick="excluirRegistro('${id}')" title="Excluir" class="p-2.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
-        </div></td>
+        <td class="p-3.5 text-xs" data-label="Prazo / Vencimento"><div class="cel">${i.statusExec !== "Concluído" ? `<div class="font-bold ${vencido ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}">${i.prazoDias ?? 0} dias</div><div class="text-[10px] ${vencido ? "text-rose-500 font-semibold" : "text-slate-400"}">${vencido ? "VENCIDO (" + formatarData(i.vencimento) + ")" : "Vence: " + formatarData(i.vencimento)}</div>` : '<span class="text-slate-400">-</span>'}</div></td>
+        <td class="p-3.5 text-center no-print whitespace-nowrap" data-label="Ações"><div class="cel">${i.foto ? `<button onclick="verFoto('${id}')" title="Ver foto" class="p-2.5 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-image"></i></button>` : ""}<button onclick="abrirEdicaoRapida('${id}')" title="Editar" class="p-2.5 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button><button onclick="excluirRegistro('${id}')" title="Excluir" class="p-2.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button></div></td>
       </tr>`;
   }).join("");
 }
 
-function verFoto(id) {
-  const r = registrosAuditoria.find(x => x.id === id);
-  if (!r || !r.foto) return;
-  $("imgFoto").src = r.foto;
-  $("modalFoto").classList.remove("hidden");
-}
-
+function verFoto(id) { const r = registrosAuditoria.find(x => x.id === id); if (r && r.foto) { $("imgFoto").src = r.foto; $("modalFoto").classList.remove("hidden"); } }
 function abrirEdicaoRapida(id) {
-  const i = registrosAuditoria.find(r => r.id === id);
-  if (!i) return;
-  $("editIdRegistro").value = i.id;
-  $("editStatusConf").value = i.statusConf || "Conforme";
-  $("editPrazo").value = i.prazoDias ?? 5;
+  const i = registrosAuditoria.find(r => r.id === id); if (!i) return;
+  $("editIdRegistro").value = i.id; $("editModulo").value = "bpf";
+  $("editStatusConf").value = i.statusConf || "Conforme"; $("editPrazo").value = i.prazoDias ?? 5;
   $("modalEdicao").classList.remove("hidden");
 }
 function fecharModalEdicao() { $("modalEdicao").classList.add("hidden"); }
-
-function salvarEdicaoRapida() {
-  const item = registrosAuditoria.find(r => r.id === $("editIdRegistro").value);
-  if (item) {
-    const statusConf = $("editStatusConf").value;
-    const prazo = lerPrazo($("editPrazo").value, 5);
-    item.statusConf = statusConf;
-    if (statusConf === "Conforme") {
-      item.statusExec = "Concluído"; item.prazoDias = 0; item.vencimento = "";
-    } else {
-      item.statusExec = statusConf === "Não Conforme" ? "Pendente" : "Em Andamento";
-      item.prazoDias = prazo;
-      item.vencimento = somarDias(item.data, prazo);
-    }
-    salvarDados();
-  }
-  fecharModalEdicao();
-  renderizarTabelaLancamentos();
-  atualizarDashboard();
-}
-
 function excluirRegistro(id) {
   if (!confirm("Deseja realmente excluir este registro?")) return;
   registrosAuditoria = registrosAuditoria.filter(r => r.id !== id);
-  salvarDados();
-  renderizarTabelaLancamentos();
-  atualizarDashboard();
+  salvarDados(); renderizarTabelaLancamentos(); atualizarDashboard();
 }
-
-function abrirModalNovaAuditoria() {
-  $("newData").value = hojeLocal();
-  $("modalAuditoria").classList.remove("hidden");
-}
-function fecharModalAuditoria() {
-  $("modalAuditoria").classList.add("hidden");
-  $("formNovaAuditoria").reset();
-  $("newSubsetor").value = "";
-  $("avisoCodigo").classList.add("hidden");
-  $("labelFoto").innerText = "Clique para tirar foto ou anexar...";
-}
-
+function abrirModalNovaAuditoria() { $("newData").value = hojeLocal(); $("modalAuditoria").classList.remove("hidden"); }
+function fecharModalAuditoria() { $("modalAuditoria").classList.add("hidden"); $("formNovaAuditoria").reset(); $("newSubsetor").value = ""; $("avisoCodigo").classList.add("hidden"); $("labelFoto").innerText = "Clique para tirar foto ou anexar..."; }
 function autopreencherDados() {
-  const cod = $("newCodigo").value.trim();
-  const achado = cod && baseCriterios.find(c => c.codigo === cod);
+  const cod = $("newCodigo").value.trim(), achado = cod && baseCriterios.find(c => c.codigo === cod);
   if (achado) {
-    $("newSetor").value = achado.setor;
-    $("newSubsetor").value = achado.subsetor;
-    $("newCriterio").value = achado.criterio;
-    $("newResponsavel").value = responsaveisSetor[achado.setor] || "Responsável Setorial";
-    $("avisoCodigo").classList.add("hidden");
+    $("newSetor").value = achado.setor; $("newSubsetor").value = achado.subsetor; $("newCriterio").value = achado.criterio;
+    $("newResponsavel").value = responsaveisSetor[achado.setor] || ""; $("avisoCodigo").classList.add("hidden");
   } else {
-    $("newSubsetor").value = "";
-    $("newCriterio").value = "";
-    $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
+    $("newSubsetor").value = ""; $("newCriterio").value = ""; $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
     $("avisoCodigo").classList.toggle("hidden", !cod);
   }
 }
-function atualizarResponsavelSetor() {
-  $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || "";
-}
-function atualizarNomeFoto(input) {
-  $("labelFoto").innerText = input.files && input.files[0] ? input.files[0].name : "Clique para tirar foto ou anexar...";
-}
+function atualizarResponsavelSetor() { $("newResponsavel").value = responsaveisSetor[$("newSetor").value] || ""; }
+function atualizarNomeFoto(input) { $("labelFoto").innerText = input.files && input.files[0] ? input.files[0].name : "Clique para tirar foto ou anexar..."; }
 
 function lerFoto(file) {
   return new Promise((resolve, reject) => {
@@ -702,8 +904,7 @@ function lerFoto(file) {
       img.onload = () => {
         const esc = Math.min(1, 800 / Math.max(img.width, img.height));
         const c = document.createElement("canvas");
-        c.width = Math.round(img.width * esc);
-        c.height = Math.round(img.height * esc);
+        c.width = Math.round(img.width * esc); c.height = Math.round(img.height * esc);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
         resolve(c.toDataURL("image/jpeg", 0.7));
       };
@@ -715,127 +916,98 @@ function lerFoto(file) {
 
 async function salvarNovaAuditoria(e) {
   e.preventDefault();
-  const setor = $("newSetor").value;
-  const data = $("newData").value;
-  const codigo = $("newCodigo").value.trim();
-  const criterio = $("newCriterio").value;
-  const statusConf = $("newStatusConf").value;
-  const responsavel = $("newResponsavel").value;
-  const observacoes = $("newObservacoes").value.trim();
-  const subsetor = $("newSubsetor").value || "Geral";
-
-  if (!criterio) { alert("Código não encontrado: o critério está vazio. Use um código cadastrado."); return; }
-  if (!setor || !responsavel) { alert("Selecione o setor."); return; }
-
+  const setor = $("newSetor").value, data = $("newData").value, codigo = $("newCodigo").value.trim(), criterio = $("newCriterio").value;
+  const statusConf = $("newStatusConf").value, responsavel = $("newResponsavel").value, observacoes = $("newObservacoes").value.trim(), subsetor = $("newSubsetor").value || "Geral";
+  if (!criterio) { alert("Critério vazio. Use um código cadastrado."); return; }
   let foto = "";
   const arq = $("newFoto").files[0];
-  if (arq) {
-    try { foto = await lerFoto(arq); }
-    catch { alert("Não foi possível ler a foto. O registro será salvo sem ela."); }
-  }
-
+  if (arq) { try { foto = await lerFoto(arq); } catch { alert("Erro ao ler foto."); } }
   let statusExec = "Concluído", prazoDias = 0;
   if (statusConf === "Não Conforme") { statusExec = "Pendente"; prazoDias = 5; }
   else if (statusConf === "NC c/ Ação Programada") { statusExec = "Em Andamento"; prazoDias = 10; }
-
   const reg = { data, setor, subsetor, codigo, criterio, statusExec, statusConf, responsavel, prazoDias, vencimento: "", acao: "-", observacoes, foto };
-
   if (statusConf === "Conforme") {
     registrosAuditoria.unshift({ id: proximoId(), ...reg });
-    salvarDados();
-    fecharModalAuditoria();
-    renderizarTabelaLancamentos();
-    atualizarDashboard();
+    salvarDados(); fecharModalAuditoria(); renderizarTabelaLancamentos(); atualizarDashboard();
   } else {
-    pendenciaTempData = reg;
-    $("inputDiasPrazo").value = prazoDias;
-    fecharModalAuditoria();
-    $("modalPrazo").classList.remove("hidden");
+    pendenciaTempData = reg; $("inputDiasPrazo").value = prazoDias; fecharModalAuditoria(); $("modalPrazo").classList.remove("hidden");
   }
 }
 
 function confirmarPrazoPendente() {
   if (pendenciaTempData) {
     const dias = lerPrazo($("inputDiasPrazo").value, 5);
-    pendenciaTempData.prazoDias = dias;
-    pendenciaTempData.vencimento = somarDias(pendenciaTempData.data, dias);
-    pendenciaTempData.acao = "Ação corretiva em andamento / definição.";
+    pendenciaTempData.prazoDias = dias; pendenciaTempData.vencimento = somarDias(pendenciaTempData.data, dias);
+    pendenciaTempData.acao = "Ação corretiva em andamento.";
     registrosAuditoria.unshift({ id: proximoId(), ...pendenciaTempData });
-    pendenciaTempData = null;
-    salvarDados();
+    pendenciaTempData = null; salvarDados();
   }
-  $("modalPrazo").classList.add("hidden");
-  renderizarTabelaLancamentos();
-  atualizarDashboard();
+  $("modalPrazo").classList.add("hidden"); renderizarTabelaLancamentos(); atualizarDashboard();
 }
-function cancelarPrazoPendente() {
-  pendenciaTempData = null;
-  $("modalPrazo").classList.add("hidden");
-}
+function cancelarPrazoPendente() { pendenciaTempData = null; $("modalPrazo").classList.add("hidden"); }
 
-/* ================= GERENCIAR CADASTRO E EXCLUSÃO DE CRITÉRIOS ================= */
-function abrirModalCadastro() { 
-  alternarAbaCadastro('novo');
-  $("modalCadastro").classList.remove("hidden"); 
+/* ================= GERENCIAR CADASTRO E EXCLUSÃO (COM ABA) ================= */
+function abrirModalCadastro() {
+  const is5s = moduloAtual === "5s";
+  $("cadCriterioWrap").classList.toggle("hidden", is5s);
+  $("cadCriterio").required = !is5s;
+  $("tituloCadastro").textContent = is5s ? "Gerenciar Cadastros 5S" : "Gerenciar Cadastros BPF";
+  alternarAbaCad('novo');
+  $("modalCadastro").classList.remove("hidden");
 }
-function fecharModalCadastro() { 
-  $("modalCadastro").classList.add("hidden"); 
-  $("formCadastroItem").reset(); 
-}
+function fecharModalCadastro() { $("modalCadastro").classList.add("hidden"); $("formCadastroItem").reset(); }
 
-function alternarAbaCadastro(aba) {
+function alternarAbaCad(aba) {
   const isNovo = aba === 'novo';
   $("formCadastroItem").classList.toggle("hidden", !isNovo);
-  $("containerListaCadastrados").classList.toggle("hidden", isNovo);
-  $("btnAbaNovoItem").className = `px-3 py-2 text-xs font-bold ${isNovo ? 'border-b-2 border-[#166534] text-[#166534]' : 'text-slate-500'}`;
-  $("btnAbaListaItens").className = `px-3 py-2 text-xs font-bold ${!isNovo ? 'border-b-2 border-[#166534] text-[#166534]' : 'text-slate-500'}`;
-  if (!isNovo) renderizarListaCadastrados();
+  $("containerListaCad").classList.toggle("hidden", isNovo);
+  $("btnAbaNovoCad").className = `px-3 py-2 text-xs font-bold ${isNovo ? 'border-b-2 border-[#166534] text-[#166534]' : 'text-slate-500'}`;
+  $("btnAbaListaCad").className = `px-3 py-2 text-xs font-bold ${!isNovo ? 'border-b-2 border-[#166534] text-[#166534]' : 'text-slate-500'}`;
+  if (!isNovo) renderizarListaCadastros();
 }
 
-function renderizarListaCadastrados() {
-  const busca = $("buscaCadastrados") ? $("buscaCadastrados").value.toLowerCase().trim() : "";
-  const filtrados = baseCriterios.filter(c => !busca || c.codigo.toLowerCase().includes(busca) || c.criterio.toLowerCase().includes(busca) || c.subsetor.toLowerCase().includes(busca));
-  $("totalItensBase").innerText = baseCriterios.length;
-
-  if (!filtrados.length) {
-    $("listaItensBase").innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum item cadastrado.</p>`;
-    return;
-  }
-
-  $("listaItensBase").innerHTML = filtrados.map(c => `
+function renderizarListaCadastros() {
+  const is5s = moduloAtual === "5s";
+  const lista = is5s ? base5s : baseCriterios;
+  const busca = $("buscaCad").value.toLowerCase().trim();
+  const filtrados = lista.filter(c => !busca || c.codigo.toLowerCase().includes(busca) || c.setor.toLowerCase().includes(busca) || c.subsetor.toLowerCase().includes(busca) || (c.criterio && c.criterio.toLowerCase().includes(busca)));
+  $("totalCadastrados").innerText = lista.length;
+  if (!filtrados.length) { $("listaCadItems").innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum item cadastrado.</p>`; return; }
+  $("listaCadItems").innerHTML = filtrados.map(c => `
     <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
       <div>
         <div class="font-bold text-emerald-600">${esc(c.codigo)} <span class="text-slate-400">(${esc(c.setor)} - ${esc(c.subsetor)})</span></div>
-        <div class="text-slate-600 dark:text-slate-300">${esc(c.criterio)}</div>
+        ${c.criterio ? `<div class="text-slate-600 dark:text-slate-300 mt-0.5">${esc(c.criterio)}</div>` : ""}
       </div>
-      <button onclick="excluirCodigoBase('${esc(c.codigo)}')" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg shrink-0" title="Excluir item"><i class="fa-solid fa-trash-can"></i></button>
+      <button onclick="excluirItemCadastrado('${esc(c.codigo)}')" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg shrink-0" title="Excluir"><i class="fa-solid fa-trash-can"></i></button>
     </div>
   `).join("");
 }
 
-function excluirCodigoBase(codigo) {
-  if (!confirm(`Deseja realmente excluir o item / código ${codigo} da base?`)) return;
-  baseCriterios = baseCriterios.filter(c => c.codigo !== codigo);
-  salvarDados();
-  renderizarListaCadastrados();
+function excluirItemCadastrado(codigo) {
+  if (!confirm(`Deseja realmente excluir o código ${codigo}?`)) return;
+  if (moduloAtual === "5s") {
+    base5s = base5s.filter(c => c.codigo !== codigo);
+    salvarDados5s();
+  } else {
+    baseCriterios = baseCriterios.filter(c => c.codigo !== codigo);
+    salvarDados();
+  }
+  renderizarListaCadastros();
 }
 
 function salvarNovoCadastroItem(e) {
   e.preventDefault();
+  const is5s = moduloAtual === "5s";
   const codigo = $("cadCodigo").value.trim();
-  if (baseCriterios.some(c => c.codigo === codigo)) {
-    alert(`O código ${codigo} já está cadastrado.`);
-    return;
-  }
-  baseCriterios.push({
-    setor: $("cadSetor").value,
-    subsetor: $("cadSubsetor").value.trim(),
-    codigo,
-    criterio: $("cadCriterio").value.trim()
-  });
-  salvarDados();
+  const lista = is5s ? base5s : baseCriterios;
+  if (lista.some(c => c.codigo.toLowerCase() === codigo.toLowerCase())) { alert(`O código ${codigo} já está cadastrado.`); return; }
+  const novo = { setor: $("cadSetor").value, subsetor: $("cadSubsetor").value.trim(), codigo };
+  if (!is5s) novo.criterio = $("cadCriterio").value.trim();
+  lista.push(novo);
+  is5s ? salvarDados5s() : salvarDados();
   fecharModalCadastro();
-  alert("Novo item/critério cadastrado com sucesso!");
+  alert(is5s ? "Setor/código 5S cadastrado com sucesso!" : "Item/critério BPF cadastrado com sucesso!");
 }
 
 /* ================= BADGES ================= */
@@ -852,288 +1024,422 @@ function getStatusBadgeHTML(s) {
   return `<span class="badge bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${esc(s)}</span>`;
 }
 
-/* ================= DASHBOARD ================= */
+/* ================= DASHBOARD BPF ================= */
 const FILTROS_STATUS = [
   ["TODOS", "Todos"], ["Conforme", "Conforme (C)"], ["Não Conforme", "Não Conforme (NC)"],
   ["NC c/ Ação Programada", "NC c/ Ação Programada"], ["Concluído", "Concluído"],
   ["Pendente", "Pendente"], ["Em Andamento", "Em Andamento"]
 ];
 function renderizarPillsStatus() {
-  const box = $("pillsStatus");
-  box.querySelectorAll("button").forEach(b => b.remove());
-  FILTROS_STATUS.forEach(([valor, rotulo]) => {
+  const box = $("pillsStatus"); box.querySelectorAll("button").forEach(b => b.remove());
+  FILTROS_STATUS.forEach(([v, rot]) => {
     const b = document.createElement("button");
-    b.className = "pill " + (valor === filtroStatusAtual ? "pill-on" : "pill-off");
-    b.textContent = rotulo;
-    b.onclick = () => setFiltroStatus(valor);
+    b.className = "pill " + (v === filtroStatusAtual ? "pill-on" : "pill-off"); b.textContent = rot;
+    b.onclick = () => { filtroStatusAtual = v; renderizarPillsStatus(); atualizarDashboard(); };
     box.appendChild(b);
   });
 }
-function setFiltroStatus(st) {
-  filtroStatusAtual = st;
-  renderizarPillsStatus();
-  atualizarDashboard();
-}
-
 function atualizarDashboard() {
-  const setor = $("dashFilterSetor").value;
-  const ini = $("dashFilterDataIni").value;
-  const fim = $("dashFilterDataFim").value;
-  const q = $("dashFilterQuery").value.toLowerCase().trim();
-
-  const comum = registrosAuditoria.filter(i => {
-    if (ini && i.data < ini) return false;
-    if (fim && i.data > fim) return false;
-    if (q && !(i.criterio.toLowerCase().includes(q) || i.responsavel.toLowerCase().includes(q))) return false;
-    if (["Conforme", "Não Conforme", "NC c/ Ação Programada"].includes(filtroStatusAtual)) return i.statusConf === filtroStatusAtual;
-    if (["Concluído", "Pendente", "Em Andamento"].includes(filtroStatusAtual)) return i.statusExec === filtroStatusAtual;
-    return true;
-  });
+  const setor = $("dashFilterSetor").value, ini = $("dashFilterDataIni").value, fim = $("dashFilterDataFim").value, q = $("dashFilterQuery").value.toLowerCase().trim();
+  const comum = registrosAuditoria.filter(i => (!ini || i.data >= ini) && (!fim || i.data <= fim) && (!q || i.criterio.toLowerCase().includes(q) || i.responsavel.toLowerCase().includes(q)) &&
+    (["Conforme", "Não Conforme", "NC c/ Ação Programada"].includes(filtroStatusAtual) ? i.statusConf === filtroStatusAtual : ["Concluído", "Pendente", "Em Andamento"].includes(filtroStatusAtual) ? i.statusExec === filtroStatusAtual : true));
   const dados = comum.filter(i => setor === "TODOS" || i.setor === setor);
-
-  const total = dados.length;
-  const conf = dados.filter(d => d.statusConf === "Conforme").length;
-  const nc = dados.filter(d => d.statusConf === "Não Conforme").length;
-  const acaoProg = dados.filter(d => d.statusConf === "NC c/ Ação Programada").length;
-  const ncTotal = nc + acaoProg;
-  const pend = dados.filter(d => d.statusExec === "Pendente" || d.statusExec === "Em Andamento").length;
-
-  const idx = total ? Math.round(conf / total * 100) : 0;
-  const pctNC = total ? Math.round(ncTotal / total * 100) : 0;
-
+  const total = dados.length, conf = dados.filter(d => d.statusConf === "Conforme").length, nc = dados.filter(d => d.statusConf === "Não Conforme").length, acaoProg = dados.filter(d => d.statusConf === "NC c/ Ação Programada").length;
+  const ncTotal = nc + acaoProg, pend = dados.filter(d => d.statusExec === "Pendente" || d.statusExec === "Em Andamento").length;
+  const idx = total ? Math.round(conf / total * 100) : 0, pctNC = total ? Math.round(ncTotal / total * 100) : 0;
   let cls = ["Insatisfatório", "text-rose-500"];
-  if (idx >= 95) cls = ["Excelente", "text-emerald-500"];
-  else if (idx >= 90) cls = ["Bom", "text-emerald-400"];
-  else if (idx >= 80) cls = ["Regular", "text-amber-500"];
+  if (idx >= 95) cls = ["Excelente", "text-emerald-500"]; else if (idx >= 90) cls = ["Bom", "text-emerald-400"]; else if (idx >= 80) cls = ["Regular", "text-amber-500"];
   if (!total) cls = ["Sem dados", "text-slate-400"];
-
-  $("kpiTotal").innerText = total;
-  $("kpiIndice").innerText = `${idx}%`;
-  $("kpiIndiceClass").innerText = cls[0];
-  $("kpiIndiceClass").className = `text-[11px] font-bold ${cls[1]}`;
-  $("kpiNC").innerText = ncTotal;
-  $("kpiNCSub").innerText = `${pctNC}% do total exibido`;
-  $("kpiPlanos").innerText = pend;
-
+  $("kpiTotal").innerText = total; $("kpiIndice").innerText = `${idx}%`; $("kpiIndiceClass").innerText = cls[0]; $("kpiIndiceClass").className = `text-[11px] font-bold ${cls[1]}`;
+  $("kpiNC").innerText = ncTotal; $("kpiNCSub").innerText = `${pctNC}% do total exibido`; $("kpiPlanos").innerText = pend;
   if (chartDonutObj) { chartDonutObj.data.datasets[0].data = [conf, nc, acaoProg]; chartDonutObj.update(); }
-  atualizarGraficoBarras(dados);
-  atualizarGraficoEvolucaoLinha(dados);
-  atualizarPainelSetores(comum, setor);
-  atualizarTopSubsetores(dados);
+  atualizarGraficoBarras(dados); atualizarGraficoEvolucaoLinha(dados); atualizarPainelSetores(comum, setor); atualizarTopSubsetores(dados);
 }
 
 function inicializarGraficos() {
   Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
-  Chart.defaults.font.family = "'Inter', sans-serif";
-  Chart.defaults.font.size = 12;
-  Chart.defaults.font.weight = 500;
+  Chart.defaults.font.family = "'Inter', sans-serif"; Chart.defaults.font.size = 12; Chart.defaults.font.weight = 500;
   aplicarTemaGraficos();
   const dark = document.documentElement.classList.contains("dark");
-
   chartDonutObj = new Chart($("chartDonut"), {
     type: "doughnut",
-    data: {
-      labels: ["Conforme", "Não Conforme", "NC c/ Ação Programada"],
-      datasets: [{ data: [0, 0, 0], backgroundColor: ["#166534", "#ef4444", "#f59e0b"], borderWidth: 2, borderColor: dark ? "#0f172a" : "#ffffff" }]
-    },
+    data: { labels: ["Conforme", "Não Conforme", "NC c/ Ação Programada"], datasets: [{ data: [0, 0, 0], backgroundColor: ["#166534", "#ef4444", "#f59e0b"], borderWidth: 2, borderColor: dark ? "#0f172a" : "#ffffff" }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } } }
   });
-
   chartBarrasObj = new Chart($("chartBarras"), {
     type: "bar",
-    data: {
-      labels: ["Área de Apoio", "Expedição", "Manutenção", "Produção", "Suprimentos"],
-      datasets: [
-        { label: "Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#166534", borderRadius: 8, borderSkipped: false },
-        { label: "Não Conforme", data: [0, 0, 0, 0, 0], backgroundColor: "#ef4444", borderRadius: 8, borderSkipped: false },
-        { label: "Ação Programada", data: [0, 0, 0, 0, 0], backgroundColor: "#f59e0b", borderRadius: 8, borderSkipped: false }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } },
-      plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } }
-    }
+    data: { labels: ["Área de Apoio", "Expedição", "Manutenção", "Produção", "Suprimentos"],
+      datasets: [{ label: "Conforme", data: [0,0,0,0,0], backgroundColor: "#166534", borderRadius: 8 }, { label: "Não Conforme", data: [0,0,0,0,0], backgroundColor: "#ef4444", borderRadius: 8 }, { label: "Ação Programada", data: [0,0,0,0,0], backgroundColor: "#f59e0b", borderRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } }, plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } } }
   });
-
   chartEvolucaoObj = new Chart($("chartEvolucaoLinha"), {
     type: "line",
-    data: {
-      labels: [],
-      datasets: [
-        {
-          label: "Taxa BPF (%)", data: [], order: 1,
-          borderWidth: 3, borderColor: "#64748b", borderCapStyle: "round", borderJoinStyle: "round",
-          cubicInterpolationMode: "monotone",
-          pointRadius: 5, pointHoverRadius: 8, pointBorderColor: "#ffffff", pointBorderWidth: 2, pointBackgroundColor: [],
-          segment: { borderColor: c => c.p1.parsed.y > c.p0.parsed.y ? "#10b981" : c.p1.parsed.y < c.p0.parsed.y ? "#ef4444" : "#64748b" }
-        },
-        { label: `Meta (${META_BPF}%)`, data: [], order: 0, borderColor: "#f59e0b", borderWidth: 2, borderDash: [4, 8], borderCapStyle: "round", pointRadius: 0, pointHoverRadius: 0 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } },
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          padding: 10,
-          filter: c => c.datasetIndex === 0,
-          callbacks: {
-            label: c => `Conformidade BPF: ${c.parsed.y}%`,
-            afterLabel: c => {
-              if (c.dataIndex === 0) return "Primeiro mês auditado";
-              const diff = c.parsed.y - c.dataset.data[c.dataIndex - 1];
-              if (diff > 0) return `▲ +${diff}% vs mês anterior`;
-              if (diff < 0) return `▼ ${diff}% vs mês anterior`;
-              return "● 0% vs mês anterior (estável)";
-            },
-            labelColor: c => {
-              const cor = corVariacao(c.dataset.data, c.dataIndex);
-              return { borderColor: cor, backgroundColor: cor };
-            }
-          }
-        }
-      }
-    }
+    data: { labels: [], datasets: [
+      { label: "Taxa BPF (%)", data: [], order: 1, borderWidth: 3, borderColor: "#64748b", cubicInterpolationMode: "monotone", pointRadius: 5, pointBackgroundColor: [], segment: { borderColor: c => c.p1.parsed.y > c.p0.parsed.y ? "#10b981" : c.p1.parsed.y < c.p0.parsed.y ? "#ef4444" : "#64748b" } },
+      { label: "Meta", data: [], order: 0, borderColor: "#f59e0b", borderWidth: 2, borderDash: [4, 8], pointRadius: 0 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
   });
 }
 
 const NOME_SETOR = { "ÁREA DE APOIO": "Área de Apoio", "EXPEDIÇÃO": "Expedição", "MANUTENÇÃO": "Manutenção", "PRODUÇÃO": "Produção", "SUPRIMENTOS": "Suprimentos" };
-function corIndice(p) { return p >= 95 ? "#10b981" : p >= 90 ? "#34d399" : p >= 80 ? "#f59e0b" : "#ef4444"; }
+const corIndice = p => p >= 95 ? "#10b981" : p >= 90 ? "#34d399" : p >= 80 ? "#f59e0b" : "#ef4444";
+const subsetorDe = r => { const c = baseCriterios.find(x => x.setor === r.setor && x.codigo === r.codigo); return (c ? c.subsetor : r.subsetor) || "Geral"; };
+const contar = lista => { const nc = lista.filter(r => r.statusConf === "Não Conforme").length, acao = lista.filter(r => r.statusConf === "NC c/ Ação Programada").length; return { total: lista.length, conf: lista.filter(r => r.statusConf === "Conforme").length, nc, acao, neg: nc + acao }; };
 
-function subsetorDe(r) {
-  const c = baseCriterios.find(x => x.setor === r.setor && x.codigo === r.codigo);
-  return (c ? c.subsetor : r.subsetor) || "Geral";
-}
-
-function contar(lista) {
-  const nc = lista.filter(r => r.statusConf === "Não Conforme").length;
-  const acao = lista.filter(r => r.statusConf === "NC c/ Ação Programada").length;
-  return { total: lista.length, conf: lista.filter(r => r.statusConf === "Conforme").length, nc, acao, neg: nc + acao };
-}
-
-function cardIndicador({ nome, sub, pct, cor, tem = true, c, onclick, ativo }) {
+function cardIndicador({ nome, sub, pct, cor, tem = true, c, onclick, ativo, txt }) {
   const ponto = (cl, n, rot) => `<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${cl}"></span>${n} ${rot}</span>`;
   const corpo = `
     <div class="flex items-center justify-between gap-2 text-xs">
-      <span class="flex items-baseline gap-1.5 min-w-0">
-        <span class="font-semibold truncate">${esc(nome)}</span>
-        ${sub ? `<span class="text-[10px] text-slate-400 truncate">· ${esc(sub)}</span>` : ""}
-      </span>
-      <span class="font-extrabold shrink-0" style="color:${cor}">${tem ? pct + "%" : "—"}</span>
+      <span class="flex items-baseline gap-1.5 min-w-0"><span class="font-semibold truncate">${esc(nome)}</span>${sub ? `<span class="text-[10px] text-slate-400 truncate">· ${esc(sub)}</span>` : ""}</span>
+      <span class="font-extrabold shrink-0" style="color:${cor}">${tem ? (txt ?? pct + "%") : "—"}</span>
     </div>
-    <div class="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full" style="width:${tem ? pct : 0}%;background:${cor}"></div></div>
-    <div class="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-slate-400 mt-1.5">
-      ${tem ? ponto("bg-emerald-500", c.conf, "conforme") + ponto("bg-rose-500", c.nc, "não conforme") + ponto("bg-amber-500", c.acao, "ação programada") : "sem registros"}
-    </div>`;
-  const cls = "block w-full text-left rounded-lg border px-3 py-2 transition " +
-    (ativo ? "border-[#166534] bg-emerald-50 dark:bg-emerald-950/40" : "border-slate-200 dark:border-slate-800") +
-    (onclick && !ativo ? " hover:bg-slate-50 dark:hover:bg-slate-800/50" : "");
-  return onclick
-    ? `<button type="button" onclick="${onclick}" class="${cls}">${corpo}</button>`
-    : `<div class="${cls}" title="${esc(sub ? nome + " · " + sub : nome)}">${corpo}</div>`;
+    <div class="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full" style="width:${tem ? Math.max(0, Math.min(100, pct)) : 0}%;background:${cor}"></div></div>
+    <div class="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-slate-400 mt-1.5">${tem ? ponto("bg-emerald-500", c.conf, "conforme") + ponto("bg-rose-500", c.nc, "não conforme") + ponto("bg-amber-500", c.acao, "ação programada") : "sem registros"}</div>`;
+  const cls = "block w-full text-left rounded-lg border px-3 py-2 transition " + (ativo ? "border-[#166534] bg-emerald-50 dark:bg-emerald-950/40" : "border-slate-200 dark:border-slate-800") + (onclick && !ativo ? " hover:bg-slate-50 dark:hover:bg-slate-800/50" : "");
+  return onclick ? `<button type="button" onclick="${onclick}" class="${cls}">${corpo}</button>` : `<div class="${cls}">${corpo}</div>`;
 }
 
 function atualizarPainelSetores(registros, setorSel) {
   $("listaSetores").innerHTML = SETORES.map(s => {
-    const c = contar(registros.filter(r => r.setor === s));
-    const tem = c.total > 0;
-    const pct = tem ? Math.round(c.conf / c.total * 100) : 0;
+    const c = contar(registros.filter(r => r.setor === s)), tem = c.total > 0, pct = tem ? Math.round(c.conf / c.total * 100) : 0;
     return cardIndicador({ nome: NOME_SETOR[s], pct, cor: tem ? corIndice(pct) : "#64748b", tem, c, onclick: `selecionarSetorPainel('${s}')`, ativo: s === setorSel });
   }).join("");
 }
-
+function selecionarSetorPainel(s) { $("dashFilterSetor").value = $("dashFilterSetor").value === s ? "TODOS" : s; atualizarDashboard(); }
 function atualizarTopSubsetores(dados) {
   const mapa = {};
-  dados.forEach(r => {
-    const sub = subsetorDe(r);
-    const k = r.setor + "|" + sub;
-    (mapa[k] = mapa[k] || { sub, setor: r.setor, lista: [] }).lista.push(r);
-  });
+  dados.forEach(r => { const sub = subsetorDe(r), k = r.setor + "|" + sub; (mapa[k] = mapa[k] || { sub, setor: r.setor, lista: [] }).lista.push(r); });
   const grupos = Object.values(mapa).map(g => ({ ...g, c: contar(g.lista) }));
   const pctDe = (g, campo) => Math.round(g.c[campo] / g.c.total * 100);
-
   const colunas = [
-    { rotulo: "Top 5 subsetores · Conformes", dica: "Maior % de itens conformes", icone: "fa-circle-check text-emerald-500", campo: "conf", cor: () => "#10b981", vazio: "Nenhum subsetor conforme neste filtro." },
-    { rotulo: "Top 5 subsetores · Não conformes", dica: "Maior % de não conformidades", icone: "fa-circle-xmark text-rose-500", campo: "neg", cor: () => "#ef4444", vazio: "Nenhuma não conformidade neste filtro." },
-    { rotulo: "Top 5 subsetores · Ação programada", dica: "Maior % de itens com ação programada", icone: "fa-clock text-amber-500", campo: "acao", cor: () => "#f59e0b", vazio: "Nenhuma ação programada neste filtro." }
+    { rot: "Top 5 subsetores · Conformes", icone: "fa-circle-check text-emerald-500", campo: "conf", cor: () => "#10b981", vazio: "Nenhum subsetor conforme." },
+    { rot: "Top 5 subsetores · Não conformes", icone: "fa-circle-xmark text-rose-500", campo: "neg", cor: () => "#ef4444", vazio: "Nenhuma não conformidade." },
+    { rot: "Top 5 subsetores · Ação programada", icone: "fa-clock text-amber-500", campo: "acao", cor: () => "#f59e0b", vazio: "Nenhuma ação programada." }
   ];
-
   $("topSubsetores").innerHTML = colunas.map(col => {
-    const top = grupos
-      .filter(g => g.c[col.campo] > 0)
-      .sort((a, b) => pctDe(b, col.campo) - pctDe(a, col.campo) || b.c[col.campo] - a.c[col.campo] || b.c.total - a.c.total)
-      .slice(0, 5);
-    const cards = top.length
-      ? top.map(g => { const p = pctDe(g, col.campo); return cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: p, cor: col.cor(p), c: g.c }); }).join("")
-      : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
-    return `<div class="min-w-0"><p class="lbl flex items-center gap-1.5" title="${col.dica}"><i class="fa-solid ${col.icone}"></i>${col.rotulo}</p><div class="space-y-2">${cards}</div></div>`;
+    const top = grupos.filter(g => g.c[col.campo] > 0).sort((a, b) => pctDe(b, col.campo) - pctDe(a, col.campo)).slice(0, 5);
+    const cards = top.length ? top.map(g => cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: pctDe(g, col.campo), cor: col.cor(), c: g.c })).join("") : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
+    return `<div class="min-w-0"><p class="lbl flex items-center gap-1.5"><i class="fa-solid ${col.icone}"></i>${col.rot}</p><div class="space-y-2">${cards}</div></div>`;
   }).join("");
 }
-
-function selecionarSetorPainel(s) {
-  const sel = $("dashFilterSetor");
-  sel.value = sel.value === s ? "TODOS" : s;
-  atualizarDashboard();
-}
-
 function atualizarGraficoBarras(dados) {
   if (!chartBarrasObj) return;
-  const pct = (s, status) => {
-    const sub = dados.filter(d => d.setor === s);
-    return sub.length ? Math.round(sub.filter(d => d.statusConf === status).length / sub.length * 100) : 0;
-  };
+  const pct = (s, status) => { const sub = dados.filter(d => d.setor === s); return sub.length ? Math.round(sub.filter(d => d.statusConf === status).length / sub.length * 100) : 0; };
   chartBarrasObj.data.datasets[0].data = SETORES.map(s => pct(s, "Conforme"));
   chartBarrasObj.data.datasets[1].data = SETORES.map(s => pct(s, "Não Conforme"));
   chartBarrasObj.data.datasets[2].data = SETORES.map(s => pct(s, "NC c/ Ação Programada"));
   chartBarrasObj.update();
 }
-
 function atualizarGraficoEvolucaoLinha(registros) {
   if (!chartEvolucaoObj) return;
   const meses = {};
-  registros.forEach(r => {
-    const p = (r.data || "").split("-");
-    if (p.length !== 3) return;
-    const k = `${p[0]}-${p[1]}`;
-    meses[k] = meses[k] || { total: 0, conf: 0 };
-    meses[k].total++;
-    if (r.statusConf === "Conforme") meses[k].conf++;
-  });
-
-  const chaves = Object.keys(meses).sort();
-  const labels = chaves.map(k => { const [a, m] = k.split("-"); return `${getNomeMesAbrev(+m)}/${a.slice(2)}`; });
-  const valores = chaves.map(k => Math.round(meses[k].conf / meses[k].total * 100));
-
-  chartEvolucaoObj.data.labels = labels;
+  registros.forEach(r => { const p = (r.data || "").split("-"); if (p.length === 3) { const k = `${p[0]}-${p[1]}`; (meses[k] = meses[k] || { total: 0, conf: 0 }).total++; if (r.statusConf === "Conforme") meses[k].conf++; } });
+  const chaves = Object.keys(meses).sort(), valores = chaves.map(k => Math.round(meses[k].conf / meses[k].total * 100));
+  chartEvolucaoObj.data.labels = chaves.map(k => { const [a, m] = k.split("-"); return `${getNomeMesAbrev(+m)}/${a.slice(2)}`; });
   chartEvolucaoObj.data.datasets[0].data = valores;
   chartEvolucaoObj.data.datasets[0].pointBackgroundColor = valores.map((_, i) => corVariacao(valores, i));
   chartEvolucaoObj.data.datasets[1].data = valores.map(() => META_BPF);
   chartEvolucaoObj.update();
-
-  const txt = $("txtVariacaoPct"), box = $("boxVariacaoMes");
-  const boxBase = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border ";
-  if (valores.length < 2) {
-    txt.innerText = "-";
-    txt.className = "text-sm font-extrabold text-slate-400";
-    box.className = boxBase + "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
-    return;
-  }
-  const diff = valores[valores.length - 1] - valores[valores.length - 2];
-  if (diff >= 0) {
-    txt.innerText = `+${diff}%`;
-    txt.className = "text-sm font-extrabold text-emerald-600 dark:text-emerald-400";
-    box.className = boxBase + "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60";
-  } else {
-    txt.innerText = `${diff}%`;
-    txt.className = "text-sm font-extrabold text-rose-600 dark:text-rose-400";
-    box.className = boxBase + "bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60";
-  }
 }
 
-/* ================= INICIALIZAÇÃO ================= */
+/* ================= MÓDULO 5S ================= */
+const REGRAS_OURO = [
+  "Não deixe para última hora",
+  'Enviar as não conformidades no grupo de whatsapp "5S EM AÇÃO"',
+  "No dia que for realizar a auditoria comunicar o setor previamente.",
+  "Ter bom senso! Significado: Capacidade de julgar e decidir de forma sensata, equilibrada e prudente, distinguindo o certo do errado e o verdadeiro do falso."
+];
+const sn = (pontos, rotulo) => ({ pontos, rotulo });
+const SIM_NAO = () => [sn(3, "Sim"), sn(0, "Não")];
+
+const CHECKLIST_5S = [
+  { id: "q1", titulo: "ITEM 1. O facilitador acompanhou a auditoria do seu setor?", ver: "O facilitador acompanhou a auditoria do início ao fim?", params: [sn(3, "Sim"), sn(0, "Parcialmente"), sn(-3, "Não")] },
+  { id: "q2", titulo: "ITEM 2. Nível de atendimento ao plano ação do mês anterior ação anterior, pontos de 1 a 3 (Avaliar através do FCA ou no próprio kanban (P/ fazer, Fazendo, Feito)", ver: "Solicitar o FCA do Setor do mês anterior e checar se as ações descritas foram atendidas ou reprogramadas, (considerar o bom senso nessa reprogramação).", params: [sn(3, "Atendimento total"), sn(1.5, "Atendimento parcial - considerar desde que tenha justificativa p/ os não atendimentos e prazo"), sn(0, "Não atendimento"), sn(-3, "Não fez o plano de ação")] },
+  { id: "q3", titulo: "ITEM 3. O facilitador está executando as autoavaliações semanais? (avaliar através do preenchimento do Kanban)", ver: "Avaliar se facilitador está preenchendo o Kanban semanalmente.", params: [sn(3, "Sim"), sn(1.5, "Parcialmente"), sn(0, "Não")] },
+  { id: "q4", titulo: "ITEM 4. Senso de utilização - Há apenas materiais, documentos e equipamentos necessários para a execução das atividades no local de trabalho? não tendo matérias em desuso, rasgados ou vencidos?", ver: "Verificar se no local existem apenas os objetos necessários para a execução da atividade.", params: SIM_NAO() },
+  { id: "q5", titulo: "Itens pessoais estão limitados e organizados, EPIS estão sendo utilizados?", ver: "Todos os materiais estão em uso? não tendo matérias em desuso, rasgados ou vencidos?", params: SIM_NAO() },
+  { id: "q6", titulo: "ITEM 5. Senso de ordenação - Cada item tem um local definido e identificado?", ver: "Verificar se todos os objetos têm local definido para serem guardado.", params: SIM_NAO() },
+  { id: "q7", titulo: "Documentos e materiais e objetos estão armazenados de forma lógica e acessível?", ver: "Levar em consideração a regra: Uso diário deve ficar ao alcance das mãos, uso eventual guardado próximo, uso eventual pode ser guardado em outro local. Se não usa não teve nem estar no setor.", params: SIM_NAO() },
+  { id: "q8", titulo: "Pastas / arquivos / gavetas / armários/ caixas de armazenamento / canecas têm identificação clara (etiquetas, cores etc.)?", ver: "Verificar se tudo está devidamente identificado.", params: SIM_NAO() },
+  { id: "q9", titulo: "ITEM 6. Senso de limpeza - O ambiente (mesas, chão, equipamentos) está limpo e livre de poeira ou sujeira? Produção: chão e equipamentos está livre de poeira acumulada, excesso de sujeira acumulada?", ver: "Avaliar se o local e os objetivos estão devidamente limpos, levando em consideração o bom senso.", params: SIM_NAO() },
+  { id: "q10", titulo: "Lixeiras estão limpas, identificadas e no local correto?", ver: "As lixeiras têm local delimitado no chão, estão limpas em bom estado de conservação e devidamente identificadas.", params: SIM_NAO() }
+];
+
+const MAX_5S = CHECKLIST_5S.reduce((t, q) => t + Math.max(...q.params.map(p => p.pontos)), 0);
+const MIN_5S = CHECKLIST_5S.reduce((t, q) => t + Math.min(...q.params.map(p => p.pontos)), 0);
+const META_PTS = MAX_5S * META_5S / 100;
+const fmtN = n => (Math.round(n * 10) / 10).toLocaleString("pt-BR");
+const arred = n => Math.round(n * 10) / 10;
+const media = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+const totalDe = resp => CHECKLIST_5S.reduce((t, q) => t + (resp[q.id] ? resp[q.id].nota : 0), 0);
+
+function aplicarRegras5s(a, confManual, prazoManual) {
+  a.total = totalDe(a.respostas); a.max = MAX_5S;
+  a.statusConf = confManual || (a.total / MAX_5S * 100 >= META_5S ? "Conforme" : "Não Conforme");
+  if (a.statusConf === "Conforme") { a.statusExec = "Concluído"; a.prazoDias = 0; a.vencimento = ""; }
+  else {
+    a.statusExec = a.statusConf === "Não Conforme" ? "Pendente" : "Em Andamento";
+    a.prazoDias = prazoManual ?? (a.statusConf === "Não Conforme" ? 5 : 10);
+    a.vencimento = somarDias(a.data, a.prazoDias);
+  }
+  return a;
+}
+
+function seed5s(id, data, setor, subsetor, codigo, notas, conf, prazo) {
+  const respostas = {};
+  CHECKLIST_5S.forEach((q, i) => { respostas[q.id] = { param: q.params.findIndex(p => p.pontos === notas[i]), nota: notas[i], obs: "" }; });
+  return aplicarRegras5s({ id, data, setor, subsetor, codigo, auditor: AUDITOR_5S, respostas }, conf, prazo);
+}
+
+function salvarDados5s() {
+  try { localStorage.setItem(STORAGE_5S, JSON.stringify({ auditorias: auditorias5s, base: base5s })); }
+  catch (e) { console.warn("Erro ao salvar 5S", e); }
+}
+
+function limparFiltros5s() { $("f5sSetor").value = "TODOS"; $("f5sData").value = ""; $("f5sBusca").value = ""; renderizar5sLanc(); }
+function renderizar5sLanc() {
+  const setorSel = $("f5sSetor").value, dataSel = $("f5sData").value, q = $("f5sBusca").value.toLowerCase().trim(), hoje = hojeLocal();
+  const lista = auditorias5s.filter(a =>
+    (setorSel === "TODOS" || a.setor === setorSel) && (!dataSel || a.data === dataSel) && (!q || [a.codigo, a.setor, a.subsetor].join(" ").toLowerCase().includes(q)));
+  $("counter5s").innerText = `Exibindo ${lista.length} de ${auditorias5s.length} registros`;
+  if (!lista.length) { $("tbody5s").innerHTML = `<tr><td colspan="7" data-label="" class="p-8 text-center text-slate-400 text-sm">Nenhum registro encontrado.</td></tr>`; return; }
+  $("tbody5s").innerHTML = lista.map(a => {
+    const aberto = a.statusExec === "Pendente" || a.statusExec === "Em Andamento";
+    const vencido = aberto && a.vencimento && a.vencimento < hoje;
+    const andamento = a.statusConf === "NC c/ Ação Programada" || a.statusExec === "Em Andamento";
+    const rowClass = andamento ? "row-andamento" : vencido ? "row-vencido" : "hover:bg-slate-50 dark:hover:bg-slate-900/50 transition";
+    const pct = Math.round(a.total / a.max * 100), id = esc(a.id);
+    return `
+      <tr class="${rowClass}">
+        <td class="p-3.5" data-label="Código / Data"><div class="cel"><div class="font-bold">${esc(a.codigo)}</div><div class="text-[11px] text-slate-400">${formatarData(a.data)}</div></div></td>
+        <td class="p-3.5" data-label="Setor / Subsetor"><div class="cel"><div class="font-semibold text-slate-700 dark:text-slate-300">${esc(a.setor)}</div><div class="text-[11px] text-slate-400">${esc(a.subsetor)}</div></div></td>
+        <td class="p-3.5" data-label="Pontuação 5S"><div class="cel"><div class="font-bold" style="color:${corIndice(pct)}">${fmtN(a.total)} / ${fmtN(a.max)} pts</div><div class="text-[11px] text-slate-400">${pct}% de aproveitamento</div></div></td>
+        <td class="p-3.5 text-center" data-label="Status"><div class="cel">${getStatusBadgeHTML(a.statusExec)}</div></td>
+        <td class="p-3.5 text-center" data-label="Avaliação 5S"><div class="cel">${getBadgeHTML(a.statusConf)}</div></td>
+        <td class="p-3.5 text-xs" data-label="Prazo / Vencimento"><div class="cel">${a.statusExec !== "Concluído" ? `<div class="font-bold ${vencido ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300"}">${a.prazoDias ?? 0} dias</div><div class="text-[10px] ${vencido ? "text-rose-500 font-semibold" : "text-slate-400"}">${vencido ? "VENCIDO (" + formatarData(a.vencimento) + ")" : "Vence: " + formatarData(a.vencimento)}</div>` : '<span class="text-slate-400">-</span>'}</div></td>
+        <td class="p-3.5 text-center no-print whitespace-nowrap" data-label="Ações"><div class="cel"><button onclick="verPdf5s('${id}')" title="Ver PDF" class="p-2.5 text-slate-400 hover:text-sky-500"><i class="fa-solid fa-file-pdf"></i></button><button onclick="abrirQuest5s('${id}')" title="Abrir questionário" class="p-2.5 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-clipboard-list"></i></button><button onclick="abrirEdicao5s('${id}')" title="Editar avaliação" class="p-2.5 text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button><button onclick="excluir5s('${id}')" title="Excluir" class="p-2.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button></div></td>
+      </tr>`;
+  }).join("");
+}
+
+function abrirModalNova5s() { $("n5Data").value = formatarData(hojeLocal()); $("n5Resp").value = AUDITOR_5S; $("modalNova5s").classList.remove("hidden"); }
+function fecharModalNova5s() { $("modalNova5s").classList.add("hidden"); $("formNova5s").reset(); $("n5Aviso").classList.add("hidden"); }
+const acharCodigo5s = cod => cod && base5s.find(c => c.codigo.toLowerCase() === cod.toLowerCase());
+function autopreencher5s() {
+  const cod = $("n5Codigo").value.trim(), ach = acharCodigo5s(cod);
+  $("n5Setor").value = ach ? ach.setor : ""; $("n5Subsetor").value = ach ? ach.subsetor : "";
+  $("n5Aviso").classList.toggle("hidden", !cod || !!ach);
+}
+function iniciarAuditoria5s(e) {
+  e.preventDefault();
+  const ach = acharCodigo5s($("n5Codigo").value.trim());
+  if (!ach) { alert("Código não encontrado. Cadastre-o em \"Cadastro\" primeiro."); return; }
+  quest5s = { aud: { id: proximoId5s(), data: hojeLocal(), setor: ach.setor, subsetor: ach.subsetor, codigo: ach.codigo, auditor: AUDITOR_5S, respostas: {} } };
+  fecharModalNova5s(); abrirQuestionario();
+}
+
+function abrirQuest5s(id) { const a = auditorias5s.find(x => x.id === id); if (a) { quest5s = { aud: structuredClone(a) }; abrirQuestionario(); } }
+function abrirQuestionario() {
+  $("qTitulo").textContent = `${quest5s.aud.setor} / ${quest5s.aud.subsetor}`;
+  $("qCorpo").scrollTop = 0; renderQuest5s(); $("modalQuest5s").classList.remove("hidden");
+}
+function fecharQuest5s() { $("modalQuest5s").classList.add("hidden"); quest5s = null; }
+
+function renderQuest5s() {
+  const a = quest5s.aud, corpo = $("qCorpo"), rolagem = corpo.scrollTop;
+  const campo = (rot, v) => `<div><p class="lbl">${rot}</p><p class="text-sm font-semibold">${esc(v)}</p></div>`;
+  let h = `<div class="card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">${campo("Data", formatarData(a.data))}${campo("Auditor", a.auditor)}${campo("Setor Auditado", a.setor + " / " + a.subsetor)}</div>
+    <details class="card p-4 text-xs"><summary class="cursor-pointer font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">Regras de Ouro da auditoria</summary>
+      <ul class="mt-2 space-y-1 list-disc pl-5 text-slate-500 dark:text-slate-400">${REGRAS_OURO.map(r => `<li>${esc(r)}</li>`).join("")}</ul></details>`;
+  h += CHECKLIST_5S.map(q => {
+    const r = a.respostas[q.id];
+    return `<div class="card p-4 space-y-3">
+      <p class="font-bold text-sm leading-snug">${esc(q.titulo)}</p>
+      <div class="rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-3 text-xs">
+        <p class="font-bold uppercase text-[11px] text-slate-400 mb-1">O que verificar?</p><p class="text-slate-600 dark:text-slate-300">${esc(q.ver)}</p></div>
+      <div><p class="lbl">Parâmetros</p><div class="space-y-2">
+        ${q.params.map((p, i) => { const on = r && r.param === i;
+          return `<button type="button" onclick="abrirNota5s('${q.id}',${i})" class="w-full flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition ${on ? "border-[#166534] bg-emerald-50 dark:bg-emerald-950/40" : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"}">
+            <i class="fa-solid ${on ? "fa-circle-dot text-[#166534]" : "fa-circle text-slate-300 dark:text-slate-600"}"></i>
+            <span class="flex-1">${esc(p.rotulo)}</span><span class="text-xs font-bold text-slate-400">${fmtN(p.pontos)}</span></button>`; }).join("")}
+      </div></div>
+      ${r ? `<div class="text-xs rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 p-3"><span class="font-bold">Pontuação atribuída: ${fmtN(r.nota)}</span>${r.obs ? `<p class="mt-1 text-slate-500 dark:text-slate-400 italic">Obs: ${esc(r.obs)}</p>` : ""}</div>` : ""}
+    </div>`;
+  }).join("");
+  corpo.innerHTML = h; corpo.scrollTop = rolagem;
+  const tot = totalDe(a.respostas);
+  $("qTotal").innerHTML = `Pontuação: <span class="${tot < 0 ? "text-rose-500" : "text-emerald-500"}">${fmtN(tot)}</span> / ${MAX_5S}`;
+}
+
+function abrirNota5s(qid, i) {
+  const q = CHECKLIST_5S.find(x => x.id === qid), prev = quest5s.aud.respostas[qid];
+  notaTemp = { qid, i, nota: prev && prev.param === i ? prev.nota : q.params[i].pontos };
+  $("notaParam").innerHTML = `Parâmetro marcado: <b>${esc(q.params[i].rotulo)}</b>`;
+  $("notaObs").value = prev ? prev.obs || "" : "";
+  renderChipsNota(); $("modalNota5s").classList.remove("hidden");
+}
+function renderChipsNota() {
+  const q = CHECKLIST_5S.find(x => x.id === notaTemp.qid);
+  const vals = [...new Set(q.params.map(p => p.pontos))].sort((a, b) => b - a);
+  $("notaChips").innerHTML = vals.map(v => `<button type="button" onclick="escolherNota5s(${v})" class="btn !min-h-[40px] !px-4 ${v === notaTemp.nota ? "btn-p" : "btn-s"}">${fmtN(v)}</button>`).join("");
+}
+function escolherNota5s(v) { notaTemp.nota = v; renderChipsNota(); }
+function cancelarNota5s() { notaTemp = null; $("modalNota5s").classList.add("hidden"); }
+function confirmarNota5s() {
+  quest5s.aud.respostas[notaTemp.qid] = { param: notaTemp.i, nota: notaTemp.nota, obs: $("notaObs").value.trim() };
+  cancelarNota5s(); renderQuest5s();
+}
+
+function salvarQuest5s() {
+  const a = quest5s.aud, faltam = CHECKLIST_5S.filter(q => !a.respostas[q.id]).length;
+  if (faltam) { alert(`Faltam ${faltam} pergunta(s) sem resposta.`); return; }
+  const antigo = auditorias5s.find(x => x.id === a.id);
+  const manual = antigo && antigo.statusConf === "NC c/ Ação Programada" && totalDe(a.respostas) / MAX_5S * 100 < META_5S ? "NC c/ Ação Programada" : undefined;
+  aplicarRegras5s(a, manual);
+  antigo ? auditorias5s.splice(auditorias5s.indexOf(antigo), 1, a) : auditorias5s.unshift(a);
+  salvarDados5s(); fecharQuest5s(); renderizar5sLanc(); atualizarDashboard5s();
+  alert(`Auditoria salva! Pontuação: ${fmtN(a.total)} / ${MAX_5S} (${a.statusConf}).`);
+}
+
+function visualizarQuest5s() { abrirPreview5s(quest5s.aud); }
+function verPdf5s(id) { const a = auditorias5s.find(x => x.id === id); if (a) abrirPreview5s(a); }
+function abrirPreview5s(a) { $("pdfSheet").innerHTML = htmlPdf5s(a); $("previewPDF").classList.remove("hidden"); $("previewPDF").scrollTop = 0; }
+function fecharPreview5s() { $("previewPDF").classList.add("hidden"); }
+function imprimirPreview5s() { document.body.classList.add("imprimindo-pdf"); window.print(); }
+
+function htmlPdf5s(a) {
+  const cab = `<table><tr><td class="tit">Check list - Auditoria de 3S</td><td class="rev">REV03- 260522</td></tr></table>
+    <table style="margin-top:12px"><colgroup><col style="width:40%"><col></colgroup>
+      <tr><td class="esq">Data: ${formatarData(a.data)}</td><td style="font-weight:700">Regras de Ouro da auditoria</td></tr>
+      <tr><td class="esq">Auditor: ${esc(a.auditor)}</td><td class="regras" rowspan="2">${REGRAS_OURO.map(r => `<div>${esc(r)}</div>`).join("")}</td></tr>
+      <tr><td class="esq">Setor Auditado: ${esc(a.setor)} / ${esc(a.subsetor)}</td></tr>
+    </table>`;
+  const blocos = CHECKLIST_5S.map((q, k) => {
+    const r = a.respostas[q.id], n = q.params.length;
+    const linhas = q.params.map((p, i) => `<tr><td>${p.pontos}</td><td>${esc(p.rotulo)}</td>${i === 0 ? `<td rowspan="${n}" class="nota">${r ? fmtN(r.nota) : ""}${r && r.obs ? `<div class="obs">Obs: ${esc(r.obs)}</div>` : ""}</td><td rowspan="${n}">${esc(q.ver)}</td>` : ""}</tr>`).join("");
+    return `<table class="q" style="${k === 0 ? "margin-top:8px" : ""}"><colgroup><col style="width:26%"><col style="width:25%"><col style="width:23%"><col style="width:26%"></colgroup>
+      <tr><td colspan="4" class="gray">${esc(q.titulo)}</td></tr>
+      <tr><td>Pontuação possível</td><td>Parâmetros</td><td>Pontuação atribuída</td><td>O que verificar?</td></tr>${linhas}</table>`;
+  }).join("");
+  const tot = totalDe(a.respostas);
+  return cab + blocos + `<table style="margin-top:8px"><tr><td class="gray" style="width:74%;text-align:right">PONTUAÇÃO TOTAL</td><td class="nota">${fmtN(tot)} / ${MAX_5S}</td></tr></table>`;
+}
+
+function abrirEdicao5s(id) {
+  const a = auditorias5s.find(r => r.id === id); if (!a) return;
+  $("editIdRegistro").value = a.id; $("editModulo").value = "5s";
+  $("editStatusConf").value = a.statusConf || "Conforme"; $("editPrazo").value = a.prazoDias ?? 5;
+  $("modalEdicao").classList.remove("hidden");
+}
+function excluir5s(id) {
+  if (!confirm("Deseja realmente excluir esta auditoria?")) return;
+  auditorias5s = auditorias5s.filter(r => r.id !== id);
+  salvarDados5s(); renderizar5sLanc(); atualizarDashboard5s();
+}
+
+/* ================= DASHBOARD 5S ================= */
+function renderPills5s() {
+  const box = $("pillsStatus5s"); box.querySelectorAll("button").forEach(b => b.remove());
+  FILTROS_STATUS.forEach(([v, rot]) => {
+    const b = document.createElement("button");
+    b.className = "pill " + (v === filtroStatus5s ? "pill-on" : "pill-off"); b.textContent = rot;
+    b.onclick = () => { filtroStatus5s = v; renderPills5s(); atualizarDashboard5s(); };
+    box.appendChild(b);
+  });
+}
+const passaStatus5s = a => ["Conforme", "Não Conforme", "NC c/ Ação Programada"].includes(filtroStatus5s) ? a.statusConf === filtroStatus5s : ["Concluído", "Pendente", "Em Andamento"].includes(filtroStatus5s) ? a.statusExec === filtroStatus5s : true;
+
+function inicializarGraficos5s() {
+  const dark = document.documentElement.classList.contains("dark");
+  chart5Donut = new Chart($("chart5Donut"), {
+    type: "doughnut",
+    data: { labels: ["Conforme", "Não Conforme", "NC c/ Ação Programada"], datasets: [{ data: [0, 0, 0], backgroundColor: ["#166534", "#ef4444", "#f59e0b"], borderWidth: 2, borderColor: dark ? "#0f172a" : "#ffffff" }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } } }
+  });
+  const ds = (label, cor) => ({ label, data: [], backgroundColor: cor, borderRadius: 8, maxBarThickness: 56 });
+  chart5Barras = new Chart($("chart5Barras"), {
+    type: "bar",
+    data: { labels: ["Área de Apoio", "Expedição", "Manutenção", "Produção", "Suprimentos"], datasets: [ds("Meta atingida", "#166534"), ds("Abaixo da meta", "#f59e0b"), ds("Negativa", "#ef4444")] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, min: MIN_5S, max: MAX_5S }, x: { stacked: true, grid: { display: false } } }, plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } } }
+  });
+  chart5Evol = new Chart($("chart5Evol"), {
+    type: "line",
+    data: { labels: [], datasets: [
+      { label: "Pontuação média (pts)", data: [], order: 1, borderWidth: 3, borderColor: "#64748b", cubicInterpolationMode: "monotone", pointRadius: 5, pointBackgroundColor: [], segment: { borderColor: c => c.p1.parsed.y > c.p0.parsed.y ? "#10b981" : c.p1.parsed.y < c.p0.parsed.y ? "#ef4444" : "#64748b" } },
+      { label: "Meta", data: [], order: 0, borderColor: "#f59e0b", borderWidth: 2, borderDash: [4, 8], pointRadius: 0 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: MIN_5S, max: MAX_5S }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+  });
+}
+
+function atualizarDashboard5s() {
+  if (!chart5Donut) return;
+  const setor = $("d5sSetor").value, ini = $("d5sIni").value, fim = $("d5sFim").value, q = $("d5sQuery").value.toLowerCase().trim();
+  const comum = auditorias5s.filter(a => (!ini || a.data >= ini) && (!fim || a.data <= fim) && (!q || [a.codigo, a.setor, a.subsetor].join(" ").toLowerCase().includes(q)) && passaStatus5s(a));
+  const dados = comum.filter(a => setor === "TODOS" || a.setor === setor);
+  const c = contar(dados), pend = dados.filter(a => a.statusExec === "Pendente" || a.statusExec === "Em Andamento").length;
+
+  const meds = SETORES.map(s => media(dados.filter(a => a.setor === s).map(a => a.total))).filter(v => v !== null);
+  const idx = meds.length ? media(meds) : 0, pct = idx / MAX_5S * 100;
+  let cls = ["Insatisfatório", "text-rose-500"];
+  if (pct >= 95) cls = ["Excelente", "text-emerald-500"]; else if (pct >= 90) cls = ["Bom", "text-emerald-400"]; else if (pct >= 80) cls = ["Regular", "text-amber-500"];
+  if (!dados.length) cls = ["Sem dados", "text-slate-400"];
+  $("k5sTotal").innerText = c.total;
+  $("k5sIndice").innerText = `${fmtN(idx)} pts`;
+  $("k5sIndice").className = `kpi-v ${idx < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`;
+  $("k5sIndiceClass").innerText = dados.length ? `${cls[0]} · ${Math.round(pct)}% de ${MAX_5S} pts` : cls[0];
+  $("k5sIndiceClass").className = `text-[11px] font-bold ${cls[1]}`;
+  $("k5sNC").innerText = c.neg; $("k5sNCSub").innerText = `${c.total ? Math.round(c.neg / c.total * 100) : 0}% do total`; $("k5sPlanos").innerText = pend;
+  chart5Donut.data.datasets[0].data = [c.conf, c.nc, c.acao]; chart5Donut.update();
+
+  const med = SETORES.map(s => media(dados.filter(a => a.setor === s).map(a => a.total)));
+  chart5Barras.data.datasets[0].data = med.map(m => m !== null && m >= META_PTS ? arred(m) : null);
+  chart5Barras.data.datasets[1].data = med.map(m => m !== null && m >= 0 && m < META_PTS ? arred(m) : null);
+  chart5Barras.data.datasets[2].data = med.map(m => m !== null && m < 0 ? arred(m) : null);
+  chart5Barras.update();
+
+  const meses = {};
+  dados.forEach(a => { const k = a.data.slice(0, 7); (meses[k] = meses[k] || []).push(a.total); });
+  const chaves = Object.keys(meses).sort(), valores = chaves.map(k => arred(media(meses[k])));
+  chart5Evol.data.labels = chaves.map(k => { const [y, m] = k.split("-"); return `${getNomeMesAbrev(+m)}/${y.slice(2)}`; });
+  chart5Evol.data.datasets[0].data = valores;
+  chart5Evol.data.datasets[0].pointBackgroundColor = valores.map((_, i) => corVariacao(valores, i));
+  chart5Evol.data.datasets[1].data = valores.map(() => META_PTS);
+  chart5Evol.update();
+  $("legMeta5s").textContent = `Meta ${fmtN(META_PTS)} pts`;
+
+  const txt = $("txt5sVar"), box = $("box5sVar"), bb = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border ";
+  if (valores.length < 2) { txt.innerText = "-"; txt.className = "text-sm font-extrabold text-slate-400"; box.className = bb + "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700"; }
+  else {
+    const d = arred(valores[valores.length - 1] - valores[valores.length - 2]);
+    txt.innerText = `${d >= 0 ? "+" : ""}${fmtN(d)} pts`;
+    txt.className = "text-sm font-extrabold " + (d >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400");
+    box.className = bb + (d >= 0 ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60" : "bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60");
+  }
+
+  $("lista5sSetores").innerHTML = SETORES.map(s => {
+    const lst = comum.filter(a => a.setor === s), m = media(lst.map(a => a.total)), tem = m !== null, p = tem ? Math.round(m / MAX_5S * 100) : 0;
+    return cardIndicador({ nome: NOME_SETOR[s], pct: p, cor: tem ? corIndice(p) : "#64748b", tem, c: contar(lst), txt: tem ? `${fmtN(m)} pts` : "", onclick: `selecionarSetor5s('${s}')`, ativo: s === setor });
+  }).join("");
+
+  const mapa = {};
+  dados.forEach(a => { const k = a.setor + "|" + a.subsetor; (mapa[k] = mapa[k] || { sub: a.subsetor, setor: a.setor, lista: [] }).lista.push(a); });
+  const grupos = Object.values(mapa).map(g => ({ ...g, c: contar(g.lista), m: media(g.lista.map(a => a.total)) }));
+  const colunas = [
+    { rot: "Top 5 subsetores · Maiores pontuações", icone: "fa-circle-check text-emerald-500", cor: "#10b981", f: g => g.c.conf > 0, ord: (a, b) => b.m - a.m, vazio: "Nenhum subsetor conforme." },
+    { rot: "Top 5 subsetores · Não conformes", icone: "fa-circle-xmark text-rose-500", cor: "#ef4444", f: g => g.c.neg > 0, ord: (a, b) => a.m - b.m, vazio: "Nenhuma não conformidade." },
+    { rot: "Top 5 subsetores · Ação programada", icone: "fa-clock text-amber-500", cor: "#f59e0b", f: g => g.c.acao > 0, ord: (a, b) => b.c.acao - a.c.acao || a.m - b.m, vazio: "Nenhuma ação programada." }
+  ];
+  $("top5sSubsetores").innerHTML = colunas.map(col => {
+    const top = grupos.filter(col.f).sort(col.ord).slice(0, 5);
+    const cards = top.length ? top.map(g => cardIndicador({ nome: g.sub, sub: NOME_SETOR[g.setor], pct: Math.round(g.m / MAX_5S * 100), cor: col.cor, c: g.c, txt: `${fmtN(g.m)} pts` })).join("") : `<p class="text-xs text-slate-400 py-4 text-center">${col.vazio}</p>`;
+    return `<div class="min-w-0"><p class="lbl flex items-center gap-1.5"><i class="fa-solid ${col.icone}"></i>${col.rot}</p><div class="space-y-2">${cards}</div></div>`;
+  }).join("");
+}
+function selecionarSetor5s(s) { $("d5sSetor").value = $("d5sSetor").value === s ? "TODOS" : s; atualizarDashboard5s(); }
+
+/* ================= INICIALIZAÇÃO GERAL ================= */
 function ajustarAlturaHeader() {
   const h = document.querySelector("header");
   const fixo = getComputedStyle(h).position === "sticky";
@@ -1150,7 +1456,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderizarTabelaLancamentos();
   inicializarGraficos();
   atualizarDashboard();
-  if (document.fonts) document.fonts.ready.then(() => [chartDonutObj, chartBarrasObj, chartEvolucaoObj].forEach(c => c && c.update("none")));
+  renderPills5s(); renderizar5sLanc(); inicializarGraficos5s(); atualizarDashboard5s();
+  if (document.fonts) document.fonts.ready.then(() => todosGraficos().forEach(c => c && c.update("none")));
 });
 </script>
 </body>
